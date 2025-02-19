@@ -1,14 +1,15 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdts
 import numpy as np
 import datetime as datetime
+import sqlite3
 
 #part1
 #subexcerside 1.1.: graphical display
 from graphical_display import date
 
-path = r"C:\Users\meli\OneDrive\Desktop\FS25\Data engineering\Covid\part1\day_wise.csv"
-df = pd.read_csv(path)
+df = pd.read_csv("../data/day_wise.csv")
 df["Date"] = pd.to_datetime(df["Date"])
 
 print(df.head())
@@ -46,3 +47,7 @@ for t in range(1, days):
 
 updated_df = pd.DataFrame({'Day': range(days), 'Susceptible': S, 'Infected': I, 'Recovered': R, 'Died': D})
 plot_SIR(updated_df, R0, days)
+
+# Connecting to the database:
+connection = sqlite3.connect("../data/covid_database.db")
+
