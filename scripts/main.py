@@ -5,7 +5,7 @@ import numpy as np
 import datetime as datetime
 import sqlite3
 import plotly.express as px
-
+"""
 #part1
 #subexcerside 1.1.: graphical display
 from graphical_display import date
@@ -51,12 +51,12 @@ plot_SIR(updated_df, R0, days)
 
 # Connection to the database
 connection = sqlite3.connect("../data/covid_database.db")
-
+cursor = connection.cursor()
 
 from aufgabe3melanie import data, death_rate_by_continent, plot_death_rate, top_us_counties
 
 #part3.5: Death rate by continent
-path = r"C:\Users\meli\OneDrive\Desktop\FS25\Data engineering\DE_covid\data\covid_database.db"
+path = r"../data/covid_database.db"
 print("Calculating death rate by continent...")
 death_rate_df = death_rate_by_continent(path)
 print(death_rate_df)
@@ -73,5 +73,24 @@ print(top5_cases[['County', 'State', 'total_cases']])
 # part 3 bullet 4
 from europe_maps import maps
 maps(connection)
+"""
+
+connection = sqlite3.connect("../data/covid_database.db")
+cursor = connection.cursor()
+
+# Add complete.csv to the database
+df = pd.read_csv("../data/complete.csv")
+
+tablename = "complete"
+df.to_sql(tablename, connection, if_exists="replace")
+
+print(df.duplicated())
+
+cleaned_df = df.drop_duplicates()
+
+print(cleaned_df)
+print(sum(cleaned_df.duplicated()))
 
 
+connection.commit()
+connection.close()
