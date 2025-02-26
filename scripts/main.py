@@ -4,6 +4,7 @@ import matplotlib.dates as mdts
 import numpy as np
 import datetime as datetime
 import sqlite3
+import plotly.express as px
 
 #part1
 #subexcerside 1.1.: graphical display
@@ -48,8 +49,9 @@ for t in range(1, days):
 updated_df = pd.DataFrame({'Day': range(days), 'Susceptible': S, 'Infected': I, 'Recovered': R, 'Died': D})
 plot_SIR(updated_df, R0, days)
 
-# Connecting to the database:
+# Connection to the database
 connection = sqlite3.connect("../data/covid_database.db")
+
 
 from aufgabe3melanie import data, death_rate_by_continent, plot_death_rate, top_us_counties
 
@@ -67,4 +69,9 @@ print("Top 5 US counties with most deaths:")
 print(top5_deaths[['County', 'State', 'total_deaths']])
 print("Top 5 US counties with most recorded cases:")   
 print(top5_cases[['County', 'State', 'total_cases']])   
+
+# part 3 bullet 4
+from europe_maps import maps
+maps(connection)
+
 
