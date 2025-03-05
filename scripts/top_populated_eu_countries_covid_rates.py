@@ -16,8 +16,9 @@ def plot_covid_cases_rate(conn):
             TotalRecovered, 
             Population
         FROM worldometer_data
+        WHERE Continent = "Europe"
         ORDER BY Population DESC
-        LIMIT 50
+        LIMIT 20
     '''
     # Load the data into a pandas DataFrame
     df = pd.read_sql(query, conn)
@@ -54,7 +55,7 @@ def plot_covid_cases_rate(conn):
     ax.set_xticklabels([f"{tick:.1f}" for tick in xticks])
 
     # Add title
-    ax.set_title('Top most Populated Countries by COVID-19 Total Rates')
+    ax.set_title('Top European Countries by COVID-19 Total Rates')
  
     # Add legend inside the graph
     ax.legend(loc='lower right', ncol=1)
