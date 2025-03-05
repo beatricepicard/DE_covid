@@ -80,13 +80,18 @@ df = pd.read_csv("../data/complete.csv")
 tablename = "complete"
 df.to_sql(tablename, connection, if_exists="replace")
 
-print(df.duplicated())
+# print(df.duplicated())
 
 cleaned_df = df.drop_duplicates()
+cleaned_df.sample()
 
-print(cleaned_df)
-print(sum(cleaned_df.duplicated()))
+# print(cleaned_df)
+# print(sum(cleaned_df.duplicated()))
 
+# Part 4 bullet 4
+from groupings import group_by_country, group_by_state
+group_by_country(connection)
+group_by_state(connection)
 
 #Country Aggregation:
 from aggregation import aggregation
