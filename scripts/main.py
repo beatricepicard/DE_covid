@@ -4,8 +4,8 @@ import matplotlib.dates as mdts
 import numpy as np
 import datetime as datetime
 import sqlite3
-import plotly.express as px
-"""
+
+
 #part1
 #subexcerside 1.1.: graphical display
 from graphical_display import date
@@ -70,10 +70,6 @@ print(top5_deaths[['County', 'State', 'total_deaths']])
 print("Top 5 US counties with most recorded cases:")   
 print(top5_cases[['County', 'State', 'total_cases']])   
 
-# part 3 bullet 4
-from europe_maps import maps
-maps(connection)
-"""
 
 connection = sqlite3.connect("../data/covid_database.db")
 cursor = connection.cursor()
@@ -92,5 +88,26 @@ print(cleaned_df)
 print(sum(cleaned_df.duplicated()))
 
 
-connection.commit()
+#Country Aggregation:
+from aggregation import aggregation
+
+df_country, df_county, df_continent = aggregation(cleaned_df, connection)
+print("Country Aggregation:", df_country, "County Aggregation:", df_county, "Continent Aggregation:", df_continent)
+
+
+#extract COVID-19 data per country
+from country_summary import country_summary
+country_name = input("Enter the country name: ")
+country_stats = country_summary(country_name, connection)
+print(country_stats)
+
+from plot_country import plot_country_statistics
+from plot_aggregated_data import plot_aggregated_data
+
+#plot country statistics
+plot_country_statistics(country_name, connection)
+plot_aggregated_data(df_country, "Country.Region")
+
+
 connection.close()
+
