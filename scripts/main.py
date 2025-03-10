@@ -5,7 +5,7 @@ import numpy as np
 import datetime as datetime
 import sqlite3
 
-
+'''
 #part1
 #subexcerside 1.1.: graphical display
 from graphical_display import date
@@ -48,11 +48,11 @@ for t in range(1, days):
 
 updated_df = pd.DataFrame({'Day': range(days), 'Susceptible': S, 'Infected': I, 'Recovered': R, 'Died': D})
 plot_SIR(updated_df, R0, days)
-
+'''
 # Connection to the database
 connection = sqlite3.connect("../data/covid_database.db")
 cursor = connection.cursor()
-
+'''
 from aufgabe3melanie import data, death_rate_by_continent, plot_death_rate, top_us_counties
 
 #part3.5: Death rate by continent
@@ -112,6 +112,41 @@ from plot_aggregated_data import plot_aggregated_data
 #plot country statistics
 plot_country_statistics(country_name, connection)
 plot_aggregated_data(df_country, "Country.Region")
+
+'''
+
+from europe_maps import continent_map, world_map, add_missing_countries
+continent = "Europe"
+continent_map(connection, continent)
+# world_map(connection)
+
+tables = {'country_wise', 'day_wise', 'usa_county_wise', 'worldometer_data'}
+
+for table in tables:
+    table_name = table  # Get the actual table name
+    
+    # Fetch column information
+    cursor.execute(f"PRAGMA table_info({table_name});")
+    columns = cursor.fetchall()
+    
+    # Extract column names
+    column_names = [col[1] for col in columns]
+    
+    # Print table and column information
+    print(f"Table: {table_name}")
+    print("Columns:", column_names)
+  
+    country = 'Sweden'
+    # Fetch entries where Country.Region is country
+    cursor.execute(f"SELECT * FROM {table_name} WHERE \"Country.Region\" = '{country}';")
+    sample_entries = cursor.fetchall()
+    
+    print("Sample entries:")
+    for entry in sample_entries:
+        print(entry)
+    
+    print("-" * 50)
+
 
 
 connection.close()

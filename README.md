@@ -38,8 +38,11 @@ python main.py
    - **`main.py`**:The main script for running the data analysis and generating dashboard.
    - **`graphical_display.py`**: .
    - **`SIRmodel.py`**: Function for part 1.2 of the project.
-   - **`europe_maps.py`**: Function that creates a map of europe and displays the amount of Active Cases divided by the Population.
    - **`groupings.py`**: Functions that group the amounts of people in each category over all available dates by country or US state. 
+
+- **`dashboard`**: Contains the code relating to the visualization of the data in a streamlit dashboard.
+   - **`dashboard.py`**: The script that generates the dashboard and executes calls to all the other involved functions.
+   - **`maps.py`**: Contains functions to produce maps of the world and individual continents, containing the percentages of active Covid cases in the population with data extracted from worldometer_data and country_wise.
 ...
 
    - **`README.md`**: This file! It contains the project documentation, including setup instructions, usage details, and other important information about the project.
