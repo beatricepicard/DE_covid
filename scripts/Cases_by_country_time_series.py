@@ -165,6 +165,6 @@ def plot_covid_cases_rate_black(conn, country):
     plt.show()
 
 db_conn = get_db_conn()  
-plot_covid_cases_rate(db_conn, "China")
+plot_covid_cases_rate(db_conn, "Germany")
 plot_covid_cases_rate_black(db_conn, "China")
 db_conn.close()

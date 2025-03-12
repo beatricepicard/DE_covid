@@ -17,7 +17,7 @@ def plot_covid_cases_rate(conn):
             Population
         FROM worldometer_data
         ORDER BY Population DESC
-        LIMIT 50
+        LIMIT 20
     '''
     # Load the data into a pandas DataFrame
     df = pd.read_sql(query, conn)
