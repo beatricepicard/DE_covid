@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -26,8 +25,8 @@ def calculate_sir_parameters(country_name, df):
 
     return df
 
-csv_path = r"C:\Users\irini\OneDrive\Desktop\uptodate3\DE_Covid\data\complete.csv"
-database_path = r"C:\Users\irini\OneDrive\Desktop\uptodate3\DE_Covid\data\covid_database.db"
+csv_path = r"..\data\complete.csv"
+database_path = r"..\data\covid_database.db"
 
 conn = sqlite3.connect(database_path)
 cursor = conn.cursor()
@@ -82,7 +81,6 @@ def calculate_sir_parameters(country_name, df):
    return df
 
 
-
 st.set_page_config(page_title = "Summary of Covid-Data", layout = "wide", initial_sidebar_state = "expanded")
 
 st.title("Summary of Covid-Data")
@@ -90,6 +88,19 @@ st.title("Summary of Covid-Data")
 with st.sidebar:
     st.title("This is the title of the sidebar")
     st.write("This is the content of the sidebar")
+
+# create maps
+from maps import continent_map, world_map
+
+world_map(conn)
+
+continent = st.selectbox(
+    "Select a continent",
+    {"Europe", "Asia", "Africa", "North America", "South America"}
+)
+
+continent_map(conn, continent)
+
 
 st.header("The SIR Model")
 col1, col2 = st.columns([1,1], gap= "medium")
@@ -130,3 +141,4 @@ with col2:
 
         except Exception as e:
             st.error(f"Error calculating parameters for {selected_country}: {str(e)}")                                    
+

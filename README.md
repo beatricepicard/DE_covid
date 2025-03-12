@@ -41,6 +41,7 @@ This will execute the analysis and generate the required visualizations.
 ## Repository Structure
 The repository consists of the following directories and files:
 
+
 📂 **data/** — Contains all datasets used for the project.
    - 📄 `day_wise.csv` — The original, unprocessed dataset.
    - 📄 `processed_data.csv` — The cleaned dataset ready for analysis.
@@ -54,6 +55,10 @@ The repository consists of the following directories and files:
 
 📄 **README.md** — This file! Contains documentation and setup instructions.
 
+- **`dashboard`**: Contains the code relating to the visualization of the data in a streamlit dashboard.
+   - **`dashboard.py`**: The script that generates the dashboard and executes calls to all the other involved functions.
+   - **`maps.py`**: Contains functions to produce maps of the world and individual continents, containing the percentages of active Covid cases in the population with data extracted from worldometer_data and country_wise.
+...
 ---
 
 ## Project Link
