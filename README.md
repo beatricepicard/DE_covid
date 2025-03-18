@@ -11,6 +11,10 @@ To run this project, you will need the following Python libraries:
 - **numpy**: For numerical operations
 - **matplotlib**: For data visualization
 - **pandas**: For data manipulation and analysis
+- **sqlite3**: For database access
+- **streamlit**: For creation of the dashboard 
+- **datetime**: For handling dates
+- **plotly.express**: For maps visualizations 
 
 ---
 
