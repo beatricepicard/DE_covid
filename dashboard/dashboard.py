@@ -6,86 +6,72 @@ import plotly.express as px
 from aggregation import aggregation
 from country_summary import country_summary
 from get_countries import get_countries
+from line_chart import line_chart
 
 
-#connection to DB
+# Verbindung zur Datenbank
 db_path = "../data/covid_database.db"
 connection = sqlite3.connect(db_path)
-df = pd.read_sql("SELECT * FROM complete", connection)
-df_country, df_county, df_continent = aggregation(df, connection)
 
-#date conversion & finding date range
+# Daten abrufen
+df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
+
+# Datum umwandeln
 df["Date"] = pd.to_datetime(df["Date"])
-min_date = df["Date"].min()
-max_date = df["Date"].max()
 
-#sorting countries
-df_country = df_country.sort_values(by="Country.Region")
-countries = df_country["Country.Region"].unique().tolist()
+# Tägliche Veränderungen berechnen
+df["Daily New Cases"] = df.groupby(["Country.Region"])["Confirmed"].diff().fillna(0)
+df["Daily New Deaths"] = df.groupby(["Country.Region"])["Deaths"].diff().fillna(0)
+df["Daily New Recoveries"] = df.groupby(["Country.Region"])["Recovered"].diff().fillna(0)
 
-#starting dashboard
-st.set_page_config(page_title="COVID-19 Professional Dashboard", layout="wide")
+# Negative Werte vermeiden
+df["Daily New Cases"] = df["Daily New Cases"].clip(lower=0)
+df["Daily New Deaths"] = df["Daily New Deaths"].clip(lower=0)
+df["Daily New Recoveries"] = df["Daily New Recoveries"].clip(lower=0)
+
+# Kontinent-Zuordnung
+continent_mapping = {
+    "USA": "North America", "Canada": "North America", "Mexico": "North America",
+    "Germany": "Europe", "France": "Europe", "Italy": "Europe", "Spain": "Europe",
+    "India": "Asia", "China": "Asia", "Japan": "Asia", "South Korea": "Asia",
+    "Brazil": "South America", "Argentina": "South America", "Colombia": "South America",
+    "South Africa": "Africa", "Egypt": "Africa", "Nigeria": "Africa",
+    "Australia": "Oceania", "New Zealand": "Oceania"
+}
+
+df["Continent"] = df["Country.Region"].map(continent_mapping).fillna("Unknown")
+
+# Streamlit-App-Layout
 st.title("COVID-19 Dashboard")
 
-#sidebar
+# Sidebar für Filter
 st.sidebar.header("Filter Options")
-selected_country = st.sidebar.selectbox("Select Country:", countries, index=countries.index("Netherlands")) #setting Netherlands as starting country
-date_range = st.sidebar.date_input("Select Date Range:", [min_date, max_date], min_value=min_date, max_value=max_date)
+
+# Datumsbereich auswählen
+date_range = st.sidebar.date_input("Select Date Range:", [df["Date"].min(), df["Date"].max()], min_value=df["Date"].min(), max_value=df["Date"].max())
 start_date, end_date = pd.to_datetime(date_range)
 
-if start_date > end_date:
-    st.sidebar.error("End date must be after start date!")
+data = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
 
-#filtering data based on selected date range and selected country
-df_filtered = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
-df_country_filtered = df_filtered[df_filtered["Country.Region"] == selected_country]
+# Auswahl der Datenebene
+option = st.sidebar.selectbox("Select Data Scope:", ["Worldwide", "Continent", "Country"])
 
+if option == "Worldwide":
+    data = data.groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = "Worldwide"
+elif option == "Continent":
+    available_continents = df["Continent"].dropna().unique()
+    selected_continent = st.sidebar.selectbox("Select a Continent:", available_continents)
+    data = data[data["Continent"] == selected_continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = selected_continent
+elif option == "Country":
+    selected_country = st.sidebar.selectbox("Select a Country:", df["Country.Region"].dropna().unique())
+    data = data[data["Country.Region"] == selected_country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = selected_country
 
-#worldwide numeric values on dashboard
-st.markdown("###Global COVID-19 Statistics") #hashtags makes text appeare smaller
-col1, col2, col3, col4 = st.columns(4) #creates 4 colums
-col1.metric("Confirmed", f"{df_filtered['Confirmed'].sum():,}")
-col2.metric("Recovered", f"{df_filtered['Recovered'].sum():,}")
-col3.metric("Deaths", f"{df_filtered['Deaths'].sum():,}")
-col4.metric("Active", f"{df_filtered['Active'].sum():,}")
+# Line Charts anzeigen
+line_chart(data, scope_title)
 
-#graphs for COVID-19 trends and global spread
-st.markdown("### COVID-19 Trends & Global Spread")
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    fig_confirmed = px.bar(df_filtered, x="Date", y="Confirmed", title="Confirmed Cases Over Time", color_discrete_sequence=["blue"])
-    st.plotly_chart(fig_confirmed, use_container_width=True)
-    fig_map_confirmed = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Confirmed", title="Confirmed Cases Worldwide", color_discrete_sequence=["blue"])
-    st.plotly_chart(fig_map_confirmed, use_container_width=True)
-    #fig_bar_confirmed = px.bar(df_continent, x ="Confirmed", y = "Continent", orientation = 'h', title = "Total Confirmed Cases by Continent", color = "Confirmed", color_continuous_scale = "Blues") 
-    #st.plotly_chart(fig_bar_confirmed, use_container_width=True)
-
-with col2:
-    fig_recovered = px.bar(df_filtered, x="Date", y="Recovered", title="Recovered Cases Over Time", color_discrete_sequence=["green"])
-    st.plotly_chart(fig_recovered, use_container_width=True)
-    fig_map_recovered = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Recovered", title="Recovered Cases Worldwide", color_discrete_sequence=["green"])
-    st.plotly_chart(fig_map_recovered, use_container_width=True)
-
-with col3:
-    fig_deaths = px.bar(df_filtered, x="Date", y="Deaths", title="Deaths Over Time", color_discrete_sequence=["purple"])
-    st.plotly_chart(fig_deaths, use_container_width=True)
-    fig_map_deaths = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Deaths", title="Deaths Worldwide", color_discrete_sequence=["purple"])
-    st.plotly_chart(fig_map_deaths, use_container_width=True)
-
-with col4:
-    fig_active = px.bar(df_filtered, x="Date", y="Active", title="Active Cases Over Time", color_discrete_sequence=["orange"])
-    st.plotly_chart(fig_active, use_container_width=True)
-    fig_map_active = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Active", title="Active Cases Worldwide", color_discrete_sequence=["orange"])
-    st.plotly_chart(fig_map_active, use_container_width=True)
-
-
-
-# --- COUNTRY COMPARISON ---
-st.markdown("### Top 10 Affected Countries")
-df_top_countries = df_country.sort_values(by="Confirmed", ascending=False).head(10)
-top_countries_fig = px.bar(df_top_countries, x="Confirmed", y="Country.Region", title="Top 10 Countries by Confirmed Cases", color="Confirmed", orientation='h')
-st.plotly_chart(top_countries_fig, use_container_width=True)
 
 st.markdown(
     """
@@ -262,3 +248,5 @@ with col2:
 
         except Exception as e:
             st.error(f"Error calculating parameters for {selected_country}: {str(e)}")                                    
+
+connection.close()
