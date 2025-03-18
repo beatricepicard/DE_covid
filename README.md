@@ -48,20 +48,21 @@ The repository consists of the following directories and files:
 
 📂 **data/** — Contains all datasets used for the project.
    - 📄 `day_wise.csv` — The original, unprocessed dataset.
-   - 📄 `processed_data.csv` — The cleaned dataset ready for analysis.
+   - 📄 `covid_database.db` — The database containing the tables used for the analysis.
 
 📂 **scripts/** — Contains the source code for the project.
    - 📄 `main.py` — The main script for running the data analysis and generating the dashboard.
    - 📄 `graphical_display.py` — Script for visualization components.
    - 📄 `SIRmodel.py` — Functions related to epidemiological modeling.
-   - 📄 `europe_maps.py` — Script for generating a European COVID-19 map.
    - 📄 `groupings.py` — Functions for grouping COVID-19 data by country or US state.
+   - 📄 `generate_new_complete.py` — Script for creating a new completed dataframe from various sources.
 
 📄 **README.md** — This file! Contains documentation and setup instructions.
 
 - **`dashboard`**: Contains the code relating to the visualization of the data in a streamlit dashboard.
    - **`dashboard.py`**: The script that generates the dashboard and executes calls to all the other involved functions.
-   - **`maps.py`**: Contains functions to produce maps of the world and individual continents, containing the percentages of active Covid cases in the population with data extracted from worldometer_data and country_wise.
+   - **`maps.py`**: Contains functions to produce maps of the world and individual continents, containing the percentages of active Covid cases in the population with data extracted from new_complete.
+   - **requirements.txt**: Contains the necessary libraries and is needed to deploy the dashboard.
 ...
 ---
 
