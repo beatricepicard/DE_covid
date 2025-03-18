@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
 import shutil
+import datetime
 
 # Function that calculates the SIR parameters in order to fill in the missing values in the data frame
 def calculate_sir_parameters(country_name, df):
@@ -116,7 +117,7 @@ def aggregate_territories(df):
 
 # add column with active cases per population
 def active_cases(df):
-    df["ActiveCases/Pop."] = df["Active"] / df["Population"]
+    df["ActivePerPop"] = df["Active"] / df["Population"]
     return df
 
 
@@ -172,6 +173,8 @@ for country in countries:
     df_combined = fill_nan_values(country, df_combined, df_clean)
 
 df_full = active_cases(df_combined)
+df_full['Date'] = pd.to_datetime(df_full['Date']).dt.date
+print(df_full)
 
 # Adding the new_complete table to the database in order to use it for further computations and visualizations
 df_full.to_sql('new_complete', connection, if_exists='replace', index=False)
