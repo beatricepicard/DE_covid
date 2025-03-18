@@ -6,29 +6,54 @@ import plotly.express as px
 from aggregation import aggregation
 from country_summary import country_summary
 from get_countries import get_countries
+from line_chart import line_chart
 from functions_dashboard import calculate_sir_parameters 
 from get_countries_ import get_countries
 from cases_rates import get_cases_rates
 from continent_rate_comparison import get_continent_rates
 
-#connection to DB
+
+# Verbindung zur Datenbank
 db_path = "../data/covid_database.db"
 connection = sqlite3.connect(db_path)
-df = pd.read_sql("SELECT * FROM complete", connection)
-df_country, df_county, df_continent = aggregation(df, connection)
 
-#date conversion & finding date range
+# Daten abrufen
+df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
+
+# Datum umwandeln
 df["Date"] = pd.to_datetime(df["Date"])
-min_date = df["Date"].min()
-max_date = df["Date"].max()
 
-#sorting countries
-df_country = df_country.sort_values(by="Country.Region")
-countries = df_country["Country.Region"].unique().tolist()
+# Tägliche Veränderungen berechnen
+df["Daily New Cases"] = df.groupby(["Country.Region"])["Confirmed"].diff().fillna(0)
+df["Daily New Deaths"] = df.groupby(["Country.Region"])["Deaths"].diff().fillna(0)
+df["Daily New Recoveries"] = df.groupby(["Country.Region"])["Recovered"].diff().fillna(0)
 
-#starting dashboard
-st.set_page_config(page_title="COVID-19 Professional Dashboard", layout="wide")
+# Negative Werte vermeiden
+df["Daily New Cases"] = df["Daily New Cases"].clip(lower=0)
+df["Daily New Deaths"] = df["Daily New Deaths"].clip(lower=0)
+df["Daily New Recoveries"] = df["Daily New Recoveries"].clip(lower=0)
+
+# Kontinent-Zuordnung
+continent_mapping = {
+    "USA": "North America", "Canada": "North America", "Mexico": "North America",
+    "Germany": "Europe", "France": "Europe", "Italy": "Europe", "Spain": "Europe",
+    "India": "Asia", "China": "Asia", "Japan": "Asia", "South Korea": "Asia",
+    "Brazil": "South America", "Argentina": "South America", "Colombia": "South America",
+    "South Africa": "Africa", "Egypt": "Africa", "Nigeria": "Africa",
+    "Australia": "Oceania", "New Zealand": "Oceania"
+}
+
+df["Continent"] = df["Country.Region"].map(continent_mapping).fillna("Unknown")
+
+# Streamlit-App-Layout
 st.title("COVID-19 Dashboard")
+
+# Sidebar für Filter
+st.sidebar.header("Filter Options")
+
+# Datumsbereich auswählen
+date_range = st.sidebar.date_input("Select Date Range:", [df["Date"].min(), df["Date"].max()], min_value=df["Date"].min(), max_value=df["Date"].max())
+start_date, end_date = pd.to_datetime(date_range)
 
 # Streamlit sidebar for selecting Continent, Country, Start Date, and End Date
 st.sidebar.header("Filter Options")
@@ -71,23 +96,36 @@ with col2:
     fig_map_recovered = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Recovered", title="Recovered Cases Worldwide", color_discrete_sequence=["green"])
     st.plotly_chart(fig_map_recovered, use_container_width=True)
 
-with col3:
-    fig_deaths = px.bar(df_filtered, x="Date", y="Deaths", title="Deaths Over Time", color_discrete_sequence=["purple"])
-    st.plotly_chart(fig_deaths, use_container_width=True)
-    fig_map_deaths = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Deaths", title="Deaths Worldwide", color_discrete_sequence=["purple"])
-    st.plotly_chart(fig_map_deaths, use_container_width=True)
 
-with col4:
-    fig_active = px.bar(df_filtered, x="Date", y="Active", title="Active Cases Over Time", color_discrete_sequence=["orange"])
-    st.plotly_chart(fig_active, use_container_width=True)
-    fig_map_active = px.scatter_geo(df_country, locations="Country.Region", locationmode="country names", size="Active", title="Active Cases Worldwide", color_discrete_sequence=["orange"])
-    st.plotly_chart(fig_map_active, use_container_width=True)
+data = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
+
+# Auswahl der Datenebene
+option = st.sidebar.selectbox("Select Data Scope:", ["Worldwide", "Continent", "Country"])
+
+
+if option == "Worldwide":
+    data = data.groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = "Worldwide"
+elif option == "Continent":
+    available_continents = df["Continent"].dropna().unique()
+    selected_continent = st.sidebar.selectbox("Select a Continent:", available_continents)
+    data = data[data["Continent"] == selected_continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = selected_continent
+elif option == "Country":
+    selected_country = st.sidebar.selectbox("Select a Country:", df["Country.Region"].dropna().unique())
+    data = data[data["Country.Region"] == selected_country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = selected_country
+
+# Line Charts anzeigen
+line_chart(data, scope_title)
+
 
 # --- COUNTRY COMPARISON ---
 st.markdown("### Top 10 Affected Countries")
 df_top_countries = df_country.sort_values(by="Confirmed", ascending=False).head(10)
 top_countries_fig = px.bar(df_top_countries, x="Confirmed", y="Country.Region", title="Top 10 Countries by Confirmed Cases", color="Confirmed", orientation='h')
 st.plotly_chart(top_countries_fig, use_container_width=True)
+
 
 # --- CONTINENT COMPARISON ---
 st.markdown("### Confirmed, Death Rates by Continent")
@@ -264,6 +302,7 @@ with col1:
             st.write(f"**Recovery Rate (γ):** {country_params['gamma'].values[0]:.4f}")
             st.write(f"**Mortality Rate (μ):** {country_params['mu'].values[0]:.4f}")
         except Exception as e:
+            st.error(f"Error calculating parameters for {selected_country}: {str(e)}")                                    
             st.error(f"Error calculating parameters for {selected_country}: {str(e)}")
 
 with col2:
@@ -276,4 +315,4 @@ with col2:
     ax.set_title(f"R0 Over Time for {selected_country}")
     st.pyplot(fig)
 
-  connection.close()                                          
+    connection.close()                                          
