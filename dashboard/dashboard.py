@@ -3,18 +3,19 @@ import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
 import plotly.express as px
+import datetime
 from aggregation import aggregation
 from country_summary import country_summary
 from get_countries import get_countries
 from line_chart import line_chart
 from functions_dashboard import calculate_sir_parameters 
+from maps import continent_map, world_map
 #from get_countries_ import get_countries
 from cases_rates import get_cases_rates
 from continent_rate_comparison import get_continent_rates
 
 #path's
 db_path = "../data/covid_database.db"
-csv_path = "../data/complete.csv"
 connection = sqlite3.connect(db_path)
 
 df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
@@ -55,6 +56,14 @@ st.sidebar.header("Filter Options")
 date_range = st.sidebar.date_input("Select Date Range:", [df["Date"].min(), df["Date"].max()], min_value=df["Date"].min(), max_value=df["Date"].max())
 start_date, end_date = pd.to_datetime(date_range)
 
+# Different format needed for SIR-model
+start_date_str = start_date.strftime("%Y-%m-%d")
+end_date_str = end_date.strftime("%Y-%m-%d")
+
+# Different format needed for sliders in maps
+start_date_dt = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
+end_date_dt = datetime.datetime.strptime(end_date_str, "%Y-%m-%d").date()
+
 data = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
 
 # Auswahl der Datenebene
@@ -69,7 +78,6 @@ elif option == "Continent":
     data = data[data["Continent"] == selected_continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
     scope_title = selected_continent
     
-
 elif option == "Country":
     selected_country = st.sidebar.selectbox("Select a Country:", df["Country.Region"].dropna().unique())
     data = data[data["Country.Region"] == selected_country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
@@ -169,25 +177,25 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Create world map
+min_date = datetime.date(2020, 1, 22)
+max_date = datetime.date(2020, 7, 22)
 
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
+date = st.slider("Select a date:", min_value = min_date, max_value = max_date, value = min_date)
+world_map(connection, date)
 
-query_population = f"""
-SELECT "Country.Region", Population
-FROM worldometer_data
-"""
+# Create continent map
+continent = st.selectbox(
+    "Select a continent",
+    {"Europe", "Asia", "Africa", "North America", "South America"}
+)
+continent_date = st.slider("Select a date:", min_value = start_date_dt, max_value = end_date_dt, value = start_date_dt)
+continent_map(connection, continent, continent_date)
 
-df_population = pd.read_sql(query_population, conn)
-df_population.rename(columns={"Country.Region" : "Country"}, inplace=True)
-conn.close()
+# get dataframe from database
+query_combine = f"SELECT * FROM new_complete"
+df_combined = pd.read_sql(query_combine, connection)
 
-df = pd.read_csv(csv_path)
-
-df.rename(columns={"Country.Region": "Country"}, inplace=True) 
-df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
-
-df_combined = pd.merge(df, df_population, on="Country", how="left")
 df_combined["Susceptible"] = df_combined["Population"] - df_combined["Active"].fillna(0) - df_combined["Deaths"].fillna(0) - df_combined["Recovered"].fillna(0)
 df_combined["mu"] = float("nan")
 df_combined["gamma"] = 1 / 4.5
@@ -195,25 +203,6 @@ df_combined["beta"] = float("nan")
 df_combined["alpha"] = float("nan")
 df_combined["R0"] = float("nan")
 
-
-#create maps
-from maps import continent_map, world_map
-import datetime
-#updated_df = pd.read_csv("../data/complete.csv") !!!!! ATTENTION
-
-min_date = datetime.date(2020, 1, 22)
-max_date = datetime.date(2020, 7, 22)
-
-date = st.slider("Select a date:", min_value = min_date, max_value = max_date, value = min_date)
-world_map(df_combined, date)
-
-
-continent = st.selectbox(
-    "Select a continent",
-    {"Europe", "Asia", "Africa", "North America", "South America"}
-)
-
-continent_map(df_combined, continent, date, connection)
 
 #SIR-model
 st.header("The SIR Model")
@@ -251,7 +240,7 @@ with col2:
     st.subheader(f"R0 Over Time for {selected_country}")
     fig, ax = plt.subplots()
     ax.plot(df_combined["Date"], df_combined["R0"], marker='o', linestyle='-', color='b')
-    ax.set_xlim(start_date, end_date)
+    ax.set_xlim(start_date_str, end_date_str)
     ax.set_xlabel("Date")
     ax.set_ylabel("R0")
     ax.set_title(f"R0 Over Time for {selected_country}")
