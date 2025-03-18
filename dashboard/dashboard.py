@@ -178,7 +178,7 @@ st.markdown(
     unsafe_allow_html=True
 )
    
- 
+
 import seaborn as sns
 
 def calculate_sir_parameters(country_name, df):
@@ -202,8 +202,8 @@ def calculate_sir_parameters(country_name, df):
 
     return df
 
-csv_path = r"..\data\complete.csv"
-database_path = r"..\data\covid_database.db"
+csv_path = r"../data/complete.csv"
+database_path = r"../data/covid_database.db"
 
 conn = sqlite3.connect(database_path)
 cursor = conn.cursor()
@@ -258,23 +258,29 @@ def calculate_sir_parameters(country_name, df):
    return df
 
 
-connection.close()
-
 with st.sidebar:
     st.title("This is the title of the sidebar")
     st.write("This is the content of the sidebar")
 
+
 # create maps
 from maps import continent_map, world_map
+import datetime
+updated_df = pd.read_csv("../data/complete.csv")
 
-world_map(conn)
+min_date = datetime.date(2020, 1, 22)
+max_date = datetime.date(2020, 7, 22)
+
+date = st.slider("Select a date:", min_value = min_date, max_value = max_date, value = min_date)
+world_map(updated_df, date)
+
 
 continent = st.selectbox(
     "Select a continent",
     {"Europe", "Asia", "Africa", "North America", "South America"}
 )
 
-continent_map(conn, continent)
+continent_map(updated_df, continent, date, connection)
 
 
 st.header("The SIR Model")
