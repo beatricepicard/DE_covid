@@ -18,8 +18,9 @@ def continent_map(connection, continent, date):
     df = remove_countries(df)
     lower_continent = continent.lower()
     max_value = min(df["ActivePerPop"].max(), 0.0035)
+
     fig = px.choropleth(df, scope=lower_continent, color="ActivePerPop",
-                        color_continuous_scale="rdylgn_r", locations="Country",
+                        color_continuous_scale= 'ylgnbu', locations="Country",
                         locationmode="country names", title= f"Active Cases in {continent}",
                         hover_name = "Country", range_color=[0, max_value])
     fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Active Cases: %{z:.5%}")
@@ -36,8 +37,9 @@ def world_map(connection, date):
     df = remove_countries(df)
 
     max_value = min(df["ActivePerPop"].max(), 0.0035)
+
     fig = px.choropleth(df, scope="world", color="ActivePerPop",
-                        color_continuous_scale="rdylgn_r", locations="Country",
+                        color_continuous_scale= 'ylgnbu', locations="Country",
                         locationmode="country names", title= f"Active Cases in the whole world",
                         hover_name = "Country", range_color=[0, max_value])
     fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Active Cases: %{z:.5%}")
@@ -49,5 +51,6 @@ def world_map(connection, date):
 db_path = "../data/covid_database.db"
 connection = sqlite3.connect(db_path)
 query = f"SELECT * FROM new_complete"
-df = pd.read_sql(query, connection)
-df.to_csv("/Users/beatricepicard/Covid/new_complete.csv", index=False)
+
+df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
+
