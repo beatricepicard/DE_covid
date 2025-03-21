@@ -39,7 +39,7 @@ if 'country' not in st.session_state:
 st.sidebar.title("Filters")
 
 #date selection
-date_range, start_date, end_date, start_date_str, end_date_str, start_date_dt, end_date_dt = date(df)
+start_date, end_date, start_date_str, end_date_str, start_date_dt, end_date_dt = date(df)
 
 
 data = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
@@ -100,38 +100,100 @@ if st.session_state['page'] == 'worldwide':
 
 #Page 2: Continent/ Country data
 elif st.session_state['page'] == 'continent':
-    st.title("COVID-19 Data")
+    tab1, tab2, tab3 = st.tabs(["Continent Data", "Country Data", "SIR-Model"])
     continent = st.session_state.get('continent')
-    if not continent:
-        st.session_state['page'] = "worldwide"
-        st.rerun()
-    
     countries_by_continent = sorted(df[df["Continent"] == continent]["Country"].dropna().unique())
     default_country = countries_by_continent[0] if countries_by_continent else "Select a country"
     country = st.sidebar.selectbox( "Select Country", list(countries_by_continent), index=countries_by_continent.index(st.session_state["country"]) if st.session_state["country"] in countries_by_continent else 0)
-
     st.session_state["country"] = country
 
-    col1, col2= st.columns([1,1])
+    if not continent:
+        st.session_state['page'] = "worldwide"
+        st.rerun()
 
-    with col1: 
-        st.header(f"{continent} Data")
+    with tab1:
+        col1, col2= st.columns([1,1])
 
-        #Line charts for continent
-        continent_data = data[data["Continent"] == continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
-        line_chart(continent_data, continent)  
+        with col1: 
+            st.header(f"{continent}")
 
-    with col2: 
-        #Create Continent Map 
-        if continent == "Oceania":
-            st.warning("No map available for Oceania.")
-        else:
-            min_date = start_date_dt
-            max_date = end_date_dt
-            continent_date = st.slider("Select a date:", min_value = start_date_dt, max_value = end_date_dt, value = start_date_dt)
-            continent_map(connection, continent, continent_date)
+            #Line charts for continent
+            continent_data = data[data["Continent"] == continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+            line_chart(continent_data, continent)  
 
-        #SIR-Model per country
+        with col2: 
+            #Create Continent Map 
+            if continent == "Oceania":
+                st.warning("No map available for Oceania.")
+            else:
+                min_date = start_date_dt
+                max_date = end_date_dt
+                continent_date = st.slider("Select a date:", min_value = start_date_dt, max_value = end_date_dt, value = start_date_dt)
+                continent_map(connection, continent, continent_date)
+
+    with tab2:
+        st.subheader("COVID-19 Data by Country")
+        col6, col7 = st.columns([1,1])
+    with col6:
+        #line charts for country
+        st.header(f"COVID-19 Data for {country}")
+        country_data = data[data["Country"] == country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+        line_chart(country_data, country)
+
+    #COUNTRY COMPARISON (CASES PER 1 MILLION PEOPLE) FOR CHOSEN CONTINENT
+    with col7: 
+        st.markdown(f"### Countries comparison including {country}")
+        #col1, col2, col3 = st.columns(3)
+        df_rates = get_cases_rates(connection, start_date_str, end_date_str, continent)
+        num_countries = len(df_rates)
+        if num_countries <= 20:
+            top_n = num_countries
+        else: 
+            top_n = 20
+        
+        df_rates = df_rates.sort_values(by='ConfirmedPerPop_diff', ascending=True).head(top_n)
+       
+        if country not in df_rates["Country"].values:
+            country_data = get_cases_rates(connection, start_date_str, end_date_str, continent).query(f"Country == '{country}'")
+            df_rates = pd.concat([df_rates, country_data])
+
+        df_rates["Country"] = pd.Categorical(df_rates["Country"], categories=df_rates["Country"], ordered=True)
+        countries_list = df_rates["Country"].tolist()
+
+        confirmed_color = ["#D9F0A3" if c == country else "#41B6C4" for c in df_rates["Country"]]
+        deaths_color = ["#D9F0A3" if c == country else "#78C679" for c in df_rates["Country"]]
+        recovered_color = ["#D9F0A3" if c == country else "#ADDD8E" for c in df_rates["Country"]]
+
+        #with col1:
+        fig1 = px.bar(df_rates, y="Country", x="ConfirmedPerPop_diff", orientation="h", title="Confirmed per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence=confirmed_color)
+        fig1.update_layout(title_x=0.5)
+        fig1.update_yaxes(categoryorder="array", categoryarray=countries_list)
+        fig1.update_xaxes(title_text="") 
+        fig1.update_layout(yaxis_title="") 
+        fig1.update_layout(xaxis=dict(range=[0, df_rates["ConfirmedPerPop_diff"].max() * 1.1]))
+        st.plotly_chart(fig1)
+        
+        #with col2:
+        fig2 = px.bar(df_rates, y="Country", x="DeathsPerPop_diff", orientation="h", title="Deaths per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence= deaths_color)
+        fig2.update_layout(title_x=0.5)
+        fig2.update_yaxes(categoryorder="array", categoryarray=countries_list)
+        fig2.update_xaxes(title_text="") 
+        fig2.update_layout(yaxis_title="") 
+        #fig2.update_layout(xaxis=dict(range=[0, df_rates["DeathsPerPop_diff"].max() * 1.1]))
+        st.plotly_chart(fig2)
+
+        #with col3:
+        fig3 = px.bar(df_rates, y="Country", x="RecoveredPerPop_diff", orientation="h", title="Recovered per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence= recovered_color)
+        fig3.update_layout(title_x=0.5)
+        fig3.update_yaxes(categoryorder="array", categoryarray=countries_list)
+        fig3.update_xaxes(title_text="")  
+        fig3.update_layout(yaxis_title="")
+        fig3.update_layout(xaxis=dict(range=[0, df_rates["RecoveredPerPop_diff"].max() * 1.1])) 
+        st.plotly_chart(fig3)
+
+    with tab3:
+        st.subheader("SIR-Model")
+         #SIR-Model per country
         # Get dataframe from database
         query_combine = "SELECT * FROM new_complete"
         df_sir = pd.read_sql(query_combine, connection)
@@ -189,65 +251,7 @@ elif st.session_state['page'] == 'continent':
             ax.set_title(f"R0 Over Time for {country}")
             st.pyplot(fig)
 
-    col6, col7 = st.columns([1,1])
-    with col6:
-        #line charts for country
-        st.header(f"COVID-19 Data for {country}")
-        country_data = data[data["Country"] == country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
-        line_chart(country_data, country)
 
-    #COUNTRY COMPARISON (CASES PER 1 MILLION PEOPLE) FOR CHOSEN CONTINENT
-    with col7: 
-        st.markdown(f"### Countries comparison including {country}")
-        #col1, col2, col3 = st.columns(3)
-        df_rates = get_cases_rates(connection, start_date_str, end_date_str, continent)
-        num_countries = len(df_rates)
-        if num_countries <= 20:
-            top_n = num_countries
-        else: 
-            top_n = 20
-        
-        df_rates = df_rates.sort_values(by='ConfirmedPerPop_diff', ascending=True).head(top_n)
-       
-        if country not in df_rates["Country"].values:
-            country_data = get_cases_rates(connection, start_date_str, end_date_str, continent).query(f"Country == '{country}'")
-            df_rates = pd.concat([df_rates, country_data])
-
-        df_rates["Country"] = pd.Categorical(df_rates["Country"], categories=df_rates["Country"], ordered=True)
-        countries_list = df_rates["Country"].tolist()
-
-        confirmed_color = ["#D9F0A3" if c == country else "#41B6C4" for c in df_rates["Country"]]
-        deaths_color = ["#D9F0A3" if c == country else "#78C679" for c in df_rates["Country"]]
-        recovered_color = ["#D9F0A3" if c == country else "#ADDD8E" for c in df_rates["Country"]]
-
-        #with col1:
-        fig1 = px.bar(df_rates, y="Country", x="ConfirmedPerPop_diff", orientation="h", title="Confirmed per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence=confirmed_color)
-        fig1.update_layout(title_x=0.5)
-        fig1.update_yaxes(categoryorder="array", categoryarray=countries_list)
-        fig1.update_xaxes(title_text="") 
-        fig1.update_layout(yaxis_title="") 
-        fig1.update_layout(xaxis=dict(range=[0, df_rates["ConfirmedPerPop_diff"].max() * 1.1]))
-        st.plotly_chart(fig1)
-        
-        #with col2:
-        fig2 = px.bar(df_rates, y="Country", x="DeathsPerPop_diff", orientation="h", title="Deaths per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence= deaths_color)
-        fig2.update_layout(title_x=0.5)
-        fig2.update_yaxes(categoryorder="array", categoryarray=countries_list)
-        fig2.update_xaxes(title_text="") 
-        fig2.update_layout(yaxis_title="") 
-        #fig2.update_layout(xaxis=dict(range=[0, df_rates["DeathsPerPop_diff"].max() * 1.1]))
-        st.plotly_chart(fig2)
-
-        #with col3:
-        fig3 = px.bar(df_rates, y="Country", x="RecoveredPerPop_diff", orientation="h", title="Recovered per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence= recovered_color)
-        fig3.update_layout(title_x=0.5)
-        fig3.update_yaxes(categoryorder="array", categoryarray=countries_list)
-        fig3.update_xaxes(title_text="")  
-        fig3.update_layout(yaxis_title="")
-        fig3.update_layout(xaxis=dict(range=[0, df_rates["RecoveredPerPop_diff"].max() * 1.1])) 
-        st.plotly_chart(fig3)
-    
-     
     st.sidebar.write("---")
     if st.sidebar.button("Go Back to Worldwide Data"):
         st.session_state['page'] = 'worldwide'

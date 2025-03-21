@@ -32,6 +32,21 @@ def design():
             font-weight: 700; /* Bold Headers */
         }
 
+        /* Change tab text color */
+        div[data-baseweb="tab"] {
+            color: black !important;
+            font-weight: bold !important;
+        }
+        
+        /* Change selected tab text and underline color */
+        div[data-baseweb="tab-list"] div[aria-selected="true"] {
+            color: #007BFF !important;
+            border-bottom: 3px solid #007BFF !important;
+        }
+        /* Ensures hover effect stays correct */
+        div[data-baseweb="tab-list"] div:hover {
+            color: #007BFF !important;
+        }
         </style>
         """,
         unsafe_allow_html=True
