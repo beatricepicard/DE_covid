@@ -25,16 +25,17 @@ def line_chart(data, scope_title):
     # Display total numbers
     st.markdown(f"### Total Numbers - {scope_title}")
 
-    col_metrics1, col_metrics2, col_metrics3 = st.columns(3)
-
-    with col_metrics1:
-        st.metric(label="Total Confirmed Cases", value=f"{data['Confirmed'].max():,}")
-
-    with col_metrics2:
-        st.metric(label="Total Deaths", value=f"{data['Deaths'].max():,}")
-
-    with col_metrics3:
-        st.metric(label="Total Recovered Cases", value=f"{data['Recovered'].max():,}")
+    with st.container():
+            col_metrics1, col_metrics2, col_metrics3 = st.columns(3)
+            with col_metrics1:
+                with st.container():
+                    st.metric(label="Total Confirmed Cases", value=f"{data['Confirmed'].max():,}")
+            with col_metrics2:
+                with st.container():
+                    st.metric(label="Total Deaths", value=f"{data['Deaths'].max():,}")
+            with col_metrics3:
+                with st.container():
+                    st.metric(label="Total Recovered Cases", value=f"{data['Recovered'].max():,}")
 
     # Display cumulative line charts
     st.markdown(f"### Cumulative Trends - {scope_title}")
