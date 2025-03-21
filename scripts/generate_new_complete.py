@@ -118,6 +118,9 @@ def aggregate_territories(df):
 # add column with active cases per population
 def active_cases(df):
     df["ActivePerPop"] = df["Active"] / df["Population"]
+    df["ConfirmedPerPop"] = df["Confirmed"] / df["Population"]
+    df["DeathsPerPop"] = df["Deaths"] / df["Population"]
+    df["RecoveredPerPop"] = df["Recovered"] / df["Population"]
     return df
 
 

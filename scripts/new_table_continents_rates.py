@@ -16,45 +16,34 @@ cursor.executescript("""
 CREATE TABLE continents_rates (
     Date TEXT NOT NULL,
     Continent TEXT NOT NULL,
-    Confirmed_rate REAL,
-    Death_rate REAL,
+    ConfirmedPerPop REAL,
+    DeathPerPop REAL,
+    RecoveredPerPop REAL,
     PRIMARY KEY (Date, Continent)
 );
 
-INSERT OR REPLACE INTO continents_rates (Date, Continent, Confirmed_rate, Death_rate)
+INSERT INTO continents_rates (Date, Continent, ConfirmedPerPop, DeathPerPop, RecoveredPerPop)
 WITH AggregatedData AS (
     SELECT 
-        c.Date,
-        w.Continent,
-        SUM(c.Confirmed) AS Total_Confirmed,
-        SUM(c.Deaths) AS Total_Deaths,
-        SUM(DISTINCT w.Population) AS Total_Population -- Ensure correct population handling
-    FROM complete c
-    JOIN worldometer_data w ON c."Country.Region" = w."Country.Region"
-    WHERE w.Population > 0
-    GROUP BY c.Date, w.Continent
+        STRFTIME('%m/%d/%Y', Date) AS Date,  -- Format Date to "MM/DD/YYYY" (use as text)
+        Continent,
+        SUM(Confirmed) AS Total_Confirmed,
+        SUM(Deaths) AS Total_Deaths,
+        SUM(Recovered) AS Total_Recovered,
+        SUM(Population) AS Total_Population
+    FROM new_complete
+    WHERE Date IS NOT NULL AND TRIM(Date) != ''  -- Ensure we only use valid dates
+    GROUP BY Date, Continent
 )
 SELECT 
-    STRFTIME('%m/%d/%Y', Date) AS Date,
+    Date,
     Continent,
-    COALESCE((Total_Confirmed * 100.0 / Total_Population), 0) AS Confirmed_rate,
-    
-    COALESCE((Total_Deaths * 100.0 / Total_Population), 0) AS Death_rate
+    (Total_Confirmed * 1000000.0 / NULLIF(Total_Population, 0)) AS ConfirmedPerPop,
+    (Total_Deaths * 1000000.0 / NULLIF(Total_Population, 0)) AS DeathPerPop,
+    (Total_Recovered * 1000000.0 / NULLIF(Total_Population, 0)) AS RecoveredPerPop
 FROM AggregatedData;
 """)
 
 # Commit the changes
 conn.commit()
-
-#Load the data into a pandas DataFrame
-sql_query = "SELECT * FROM continents_rates"
-df = pd.read_sql_query(sql_query, conn)
-
-#Define the CSV file path where the table will be saved
-csv_file_path = "../data/continents_rates.csv"
-
-#Save the DataFrame as a CSV file
-df.to_csv(csv_file_path, index=False)
-
-# Close the connection
 conn.close()

@@ -1,40 +1,47 @@
 import pandas as pd
 
+'''The function is used for creating a visualisation 
+"Countries comparison including selected country" on the "COVID-19 Dashboard" by:
+- Retrieving data from covid_database table "new_complete" for different countries.
+- Filtering data by continent if a specific one is selected.
+- Converting case rates by population to cases per million people for better readability.
+- Calculating changes in cases metrics between a specified start and end date. 
+- Sorting the results based on confirmed case rate differences.
+- Providing a structured dataset for further visualization'''
+
 def get_cases_rates(conn, start_date, end_date, continent):
 
-    # Convert start_date and end_date to MM/DD/YYYY string format for sql query
-    start_date = start_date.strftime('%m/%d/%Y')
-    end_date = end_date.strftime('%m/%d/%Y')
-    
-    # Query to get data from Cases_rates table for the selected Continent and Date Range
+    # Base SQL query
     query = """
-    SELECT Date, Country, Continent, Confirmed_Rate, Deaths_Rate, Recovered_Rate
-    FROM Cases_rates
-    WHERE Date BETWEEN ? AND ?
-    """
+        SELECT Date, Country, 
+            CAST(ROUND(ConfirmedPerPop * 1000000, 0) AS INTEGER) AS ConfirmedPerPop, 
+            CAST(ROUND(DeathsPerPop * 1000000, 0) AS INTEGER) AS DeathsPerPop, 
+            CAST(ROUND(RecoveredPerPop * 1000000, 0) AS INTEGER) AS RecoveredPerPop
+        FROM new_complete
+        WHERE Date BETWEEN ? AND ?
+        """
+    params = [start_date, end_date]
 
-    # If a specific continent is selected, filter by Continent as well
+    # Add continent filter if not "All"
     if continent != "All":
         query += " AND Continent = ?"
+        params += [continent]
 
-    # Execute query with the selected date range and continent filter
-    if continent == "All":
-        df = pd.read_sql_query(query, conn, params=(start_date, end_date))
-    else:
-        df = pd.read_sql_query(query, conn, params=(start_date, end_date, continent))
+    # Execute SQL query
+    df = pd.read_sql_query(query, conn, params=(params))
 
-    # Calculate rate differences for Confirmed, Deaths, and Recovered
     df_start = df[df["Date"] == str(start_date)]
     df_end = df[df["Date"] == str(end_date)]
 
-    # Merge the dataframes for start and end date to compute differences
+    # Merge the two DataFrames on "Country" so that columns get suffixes _start and _end
     df_merged = pd.merge(df_end, df_start, on="Country", suffixes=("_end", "_start"))
 
-    # Calculate rate differences
-    df_merged["Confirmed_Rate_diff"] = df_merged["Confirmed_Rate_end"] - df_merged["Confirmed_Rate_start"]
-    df_merged["Deaths_Rate_diff"] = df_merged["Deaths_Rate_end"] - df_merged["Deaths_Rate_start"]
-    df_merged["Recovered_Rate_diff"] = df_merged["Recovered_Rate_end"] - df_merged["Recovered_Rate_start"]
+    # Compute rate differences
+    df_merged["ConfirmedPerPop_diff"] = df_merged["ConfirmedPerPop_end"] - df_merged["ConfirmedPerPop_start"]
+    df_merged["DeathsPerPop_diff"] = df_merged["DeathsPerPop_end"] - df_merged["DeathsPerPop_start"]
+    df_merged["RecoveredPerPop_diff"] = df_merged["RecoveredPerPop_end"] - df_merged["RecoveredPerPop_start"]
 
-    df_sorted = df_merged.sort_values(by="Confirmed_Rate_diff", ascending=True)
+    # Sort by confirmed cases per population difference
+    df_sorted = df_merged.sort_values(by="ConfirmedPerPop_diff", ascending=True)
 
     return df_sorted
