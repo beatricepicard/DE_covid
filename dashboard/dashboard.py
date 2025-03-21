@@ -1,59 +1,31 @@
+#libraries
 import streamlit as st
-st.set_page_config(layout = "wide")
 import pandas as pd
 import sqlite3
 import matplotlib.pyplot as plt
 import plotly.express as px
-import datetime
-from aggregation import aggregation
-from country_summary import country_summary
-from get_countries import get_countries
+import matplotlib.dates as mdates
+
+#functions
 from line_chart import line_chart
 from functions_dashboard import calculate_sir_parameters 
 from maps import continent_map, world_map
 from cases_rates import get_cases_rates
 from continent_rate_comparison import get_continent_rates
-import pycountry_convert as pc
-import matplotlib.dates as mdates
-
-def get_continent(country_name):
-    try:
-        country_code = pc.country_name_to_country_alpha2(country_name, cn_name_format="default")
-        continent_code = pc.country_alpha2_to_continent_code(country_code)
-        continent_names = {
-            "AF": "Africa",
-            "AS": "Asia",
-            "EU": "Europe",
-            "NA": "North America",
-            "SA": "South America",
-            "OC": "Oceania"
-        }
-        return continent_names.get(continent_code, "Unknown")
-    except:
-        return "Unknown"
+from dashboard_design import design
+from organizing_data import data
+from date import date
 
 #Sample data
 db_path = "../data/covid_database.db"
 connection = sqlite3.connect(db_path)
-
 df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
-# Change date
-df["Date"] = pd.to_datetime(df["Date"])
 
-# Calculate daily changes
-df["Daily New Cases"] = df.groupby(["Country.Region"])["Confirmed"].diff().fillna(0)
-df["Daily New Deaths"] = df.groupby(["Country.Region"])["Deaths"].diff().fillna(0)
-df["Daily New Recoveries"] = df.groupby(["Country.Region"])["Recovered"].diff().fillna(0)
-
-# Avoid negative values
-df["Daily New Cases"] = df["Daily New Cases"].clip(lower=0)
-df["Daily New Deaths"] = df["Daily New Deaths"].clip(lower=0)
-df["Daily New Recoveries"] = df["Daily New Recoveries"].clip(lower=0)
-
-#Assign Continents
-df["Continent"] = df["Country.Region"].apply(get_continent)
+#"organizing data"
+df = data(df)
 
 # Streamlit Pages Layout
+st.set_page_config(layout = "wide")
 # Initialize session state
 if 'page' not in st.session_state:
     st.session_state['page'] = 'worldwide'
@@ -66,15 +38,8 @@ if 'country' not in st.session_state:
 st.sidebar.title("Filters")
 
 #date selection
-date_range = st.sidebar.date_input("Select Date Range:", [df["Date"].min(), df["Date"].max()], min_value=df["Date"].min(), max_value=df["Date"].max())
-start_date, end_date = pd.to_datetime(date_range)
-# Different format needed for SIR-model
-start_date_str = start_date.strftime("%Y-%m-%d")
-end_date_str = end_date.strftime("%Y-%m-%d")
+date_range, start_date, end_date, start_date_str, end_date_str, start_date_dt, end_date_dt = date(df)
 
-# Different format needed for sliders in maps
-start_date_dt = datetime.datetime.strptime(start_date_str, "%Y-%m-%d").date()
-end_date_dt = datetime.datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
 data = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
 available_continents = sorted(df["Continent"].dropna().unique())
@@ -86,6 +51,7 @@ if continent != "Select a continent" and continent != st.session_state["continen
     st.session_state['continent'] = continent
     st.session_state['page'] = 'continent'
     st.rerun()
+
 
 #Page 1: Worldwide data
 if st.session_state['page'] == 'worldwide':
@@ -290,39 +256,5 @@ elif st.session_state['page'] == 'continent':
 
 
 #design-stuff
-st.markdown(
-    """
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
-
-    body, .stApp {
-        background-color: #FFFFFF; /* White background */
-        color: #000000; /* Black Text */
-        font-family: 'Montserrat', sans-serif; 
-    }
-
-    .stSidebar {
-    background-color: #F8F8F8; /* Very Light Gray */
-    color: #000000; /* Black Text */
-    font-family: 'Montserrat', sans-serif;
-    }
-
-    .stSelectbox, .stDateInput, .stMetric, .stPlotlyChart {
-        background-color: transparent;
-        color: #000000; 
-        border-radius: none;
-        box-shadow: none;
-        padding: 8px;
-        font-family: 'Montserrat', sans-serif;
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-        font-family: 'Montserrat', sans-serif;
-        font-weight: 700; /* Bold Headers */
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+design()
 connection.close()                                          
