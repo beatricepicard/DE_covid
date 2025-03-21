@@ -22,11 +22,11 @@ def continent_map(connection, continent, date):
 
     fig = px.choropleth(df, scope=lower_continent, color="ActivePerPop",
                         color_continuous_scale= 'ylgnbu', locations="Country",
-                        locationmode="country names", title= f"Active Cases in {continent}",
+                        locationmode="country names", title= f"Active Cases in {continent} on {date}",
                         hover_name = "Country", range_color=[0, max_value])
     fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Active Cases: %{z:.5%}")
-    fig.update_layout(coloraxis_colorbar=dict(title="Active Cases (%)", tickformat=".2%"))
-    st.plotly_chart(fig)
+    fig.update_layout(coloraxis_colorbar=dict(title="Active Cases (%)", tickformat=".2%"), dragmode=False,  autosize=True, margin=dict(t=25, b=0, l=30, r=30))
+    st.plotly_chart(fig, use_container_width=True)
     if continent == "Europe":
         st.markdown("**Note:** Sweden has been left out, because the data appears to be inaccurate/incomplete.")
     return
@@ -41,11 +41,11 @@ def world_map(connection, date):
 
     fig = px.choropleth(df, scope="world", color="ActivePerPop",
                         color_continuous_scale= 'ylgnbu', locations="Country",
-                        locationmode="country names", title= f"Active Cases on selected date",
+                        locationmode="country names", title= f"Active Cases on {date}",
                         hover_name = "Country", range_color=[0, max_value])
     fig.update_traces(hovertemplate="<b>%{hovertext}</b><br>Active Cases: %{z:.5%}")
-    fig.update_layout(coloraxis_colorbar=dict(title="Active Cases (%)", tickformat=".2%"))
-    st.plotly_chart(fig)
+    fig.update_layout(coloraxis_colorbar=dict(title="Active Cases (%)", tickformat=".2%"), dragmode=False, autosize=True, margin=dict(t=25, b=0, l=30, r=30), height = 400)
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown("**Note:** Some countries might have been left out, because the data appears to be inaccurate/incomplete.")
     return
 

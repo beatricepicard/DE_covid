@@ -59,43 +59,44 @@ if st.session_state['page'] == 'worldwide':
     st.title("COVID-19 Dashboard")
     st.header("Global Data")
 
-    col1, col2 = st.columns([3,2])
-    
-    with col1:
-        world_data = data.groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
-        scope_title = "global"
-        line_chart(world_data, scope_title)
 
-    with col2:
-        # Create world map
+    world_data = data.groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+    scope_title = "global"
+    line_chart(world_data, scope_title)
+
+    col1 = st.columns(1)
+    with col1[0]:
         min_date = start_date_dt
         max_date = end_date_dt
-        date = st.slider("Select a date:", min_value = min_date, max_value = max_date, value = min_date)
+        # Slider for date selection
+        date = st.slider("Select a date:", min_value=min_date, max_value=max_date, value=min_date, key="map_slider")    
+        # Plotting the map
         world_map(connection, date)
 
-        #CONTINENT COMPARISON (CASES PER 1 MILLION PEOPLE)
-        st.markdown("### Continent comparison")
-        col1, col2, col3 = st.columns(3)
-        connection = sqlite3.connect(db_path)
-        df_continents = get_continent_rates(connection, start_date, end_date).sort_values(by='ConfirmedPerPop_diff', ascending=True)
 
-        with col1:
-            fig1 = px.bar(df_continents, x="ConfirmedPerPop_diff", y="Continent", title="Confirmed per 1 million people", orientation='h')
-            fig1.update_traces(marker_color="#41B6C4")  # Set color properly
-            fig1.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""))
-            st.plotly_chart(fig1, use_container_width=True)
+    #CONTINENT COMPARISON (CASES PER 1 MILLION PEOPLE)
+    st.markdown("### Continent comparison")
+    col1, col2, col3 = st.columns(3)
+    connection = sqlite3.connect(db_path)
+    df_continents = get_continent_rates(connection, start_date, end_date).sort_values(by='ConfirmedPerPop_diff', ascending=True)
 
-        with col2:
-            fig2 = px.bar(df_continents, x="DeathPerPop_diff", y="Continent", title="Deaths per 1 million people", text_auto=".0f", orientation='h')
-            fig2.update_traces(marker_color="#78C679")  # Set color properly
-            fig2.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""))
-            st.plotly_chart(fig2, use_container_width=True)
+    with col1:
+        fig1 = px.bar(df_continents, x="ConfirmedPerPop_diff", y="Continent", title="Confirmed per 1 million people", orientation='h')
+        fig1.update_traces(marker_color="#41B6C4")  # Set color properly
+        fig1.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""), height = 250, margin=dict(t=30, b=0, l=0, r=15))
+        st.plotly_chart(fig1, use_container_width=True)
 
-        with col3:
-            fig3 = px.bar(df_continents, x="RecoveredPerPop_diff", y="Continent", title="Recovered per 1 million people", text_auto=".0f", orientation='h')
-            fig3.update_traces(marker_color="#ADDD8E")  # Set color properly
-            fig3.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""))
-            st.plotly_chart(fig3, use_container_width=True)
+    with col2:
+        fig2 = px.bar(df_continents, x="DeathPerPop_diff", y="Continent", title="Deaths per 1 million people", text_auto=".0f", orientation='h')
+        fig2.update_traces(marker_color="#78C679")  # Set color properly
+        fig2.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""), height = 250, margin=dict(t=30, b=0, l=0, r=15))
+        st.plotly_chart(fig2, use_container_width=True)
+
+    with col3:
+        fig3 = px.bar(df_continents, x="RecoveredPerPop_diff", y="Continent", title="Recovered per 1 million people", text_auto=".0f", orientation='h')
+        fig3.update_traces(marker_color="#ADDD8E")  # Set color properly
+        fig3.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""), height = 250, margin=dict(t=30, b=0, l=0, r=15))
+        st.plotly_chart(fig3, use_container_width=True)
 
 
 #Page 2: Continent/ Country data
@@ -253,7 +254,7 @@ elif st.session_state['page'] == 'continent':
 
 
     st.sidebar.write("---")
-    if st.sidebar.button("Go Back to Worldwide Data"):
+    if st.sidebar.button("Back to Global Data"):
         st.session_state['page'] = 'worldwide'
         st.session_state['continent'] = None
         st.session_state["country"] = None
