@@ -48,9 +48,3 @@ def world_map(connection, date):
     st.markdown("**Note:** Some countries might have been left out, because the data appears to be inaccurate/incomplete.")
     return
 
-db_path = "../data/covid_database.db"
-connection = sqlite3.connect(db_path)
-query = f"SELECT * FROM new_complete"
-
-df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
-

@@ -12,14 +12,15 @@ from functions_dashboard import calculate_sir_parameters
 from maps import continent_map, world_map
 from cases_rates import get_cases_rates
 from continent_rate_comparison import get_continent_rates
-from dashboard_design import design
+from design import design
 from organizing_data import data
 from date import date
+
 
 #Sample data
 db_path = "../data/covid_database.db"
 connection = sqlite3.connect(db_path)
-df = pd.read_sql("SELECT Date, `Country.Region`, Confirmed, Deaths, Recovered FROM complete ORDER BY Date", connection)
+df = pd.read_sql("SELECT Date, `Country`, Confirmed, Deaths, Recovered FROM new_complete ORDER BY Date", connection)
 
 #"organizing data"
 df = data(df)
@@ -56,13 +57,13 @@ if continent != "Select a continent" and continent != st.session_state["continen
 #Page 1: Worldwide data
 if st.session_state['page'] == 'worldwide':
     st.title("COVID-19 Dashboard")
-    st.header("Worldwide Data")
+    st.header("Global Data")
 
     col1, col2 = st.columns([3,2])
     
     with col1:
         world_data = data.groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
-        scope_title = "Worldwide"
+        scope_title = "global"
         line_chart(world_data, scope_title)
 
     with col2:
@@ -105,7 +106,7 @@ elif st.session_state['page'] == 'continent':
         st.session_state['page'] = "worldwide"
         st.rerun()
     
-    countries_by_continent = sorted(df[df["Continent"] == continent]["Country.Region"].dropna().unique())
+    countries_by_continent = sorted(df[df["Continent"] == continent]["Country"].dropna().unique())
     default_country = countries_by_continent[0] if countries_by_continent else "Select a country"
     country = st.sidebar.selectbox( "Select Country", list(countries_by_continent), index=countries_by_continent.index(st.session_state["country"]) if st.session_state["country"] in countries_by_continent else 0)
 
@@ -192,7 +193,7 @@ elif st.session_state['page'] == 'continent':
     with col6:
         #line charts for country
         st.header(f"COVID-19 Data for {country}")
-        country_data = data[data["Country.Region"] == country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
+        country_data = data[data["Country"] == country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
         line_chart(country_data, country)
 
     #COUNTRY COMPARISON (CASES PER 1 MILLION PEOPLE) FOR CHOSEN CONTINENT
@@ -209,7 +210,7 @@ elif st.session_state['page'] == 'continent':
         df_rates = df_rates.sort_values(by='ConfirmedPerPop_diff', ascending=True).head(top_n)
        
         if country not in df_rates["Country"].values:
-            country_data = get_cases_rates(connection, start_date, end_date, continent).query(f"Country == '{country}'")
+            country_data = get_cases_rates(connection, start_date_str, end_date_str, continent).query(f"Country == '{country}'")
             df_rates = pd.concat([df_rates, country_data])
 
         df_rates["Country"] = pd.Categorical(df_rates["Country"], categories=df_rates["Country"], ordered=True)
