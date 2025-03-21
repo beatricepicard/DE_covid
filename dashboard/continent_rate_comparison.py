@@ -1,30 +1,40 @@
 import pandas as pd
 
+'''The function is used for creating a visualisation 
+"Continent comparison" on the "COVID-19 Dashboard" by:
+- Retrieving data from covid_database table "continents_rates" for different continents.
+- Calculating changes in these metrics between a specified start and end date.
+- Sorting the results based on confirmed case rate differences.
+- Providing a structured dataset for further visualization'''
+
 def get_continent_rates(conn, start_date, end_date):
 
-    # Convert start_date and end_date to MM/DD/YYYY string format for sql query
     start_date = start_date.strftime('%m/%d/%Y')
     end_date = end_date.strftime('%m/%d/%Y')
-    
-    # Query to get data from Cases_rates table for the selected Date Range
-    query = """
-    SELECT Date, Continent, Confirmed_rate, Death_rate
-    FROM continents_rates
-    WHERE Date BETWEEN ? AND ?
-    """
 
+    # Base SQL query
+    query = """
+        SELECT Date, Continent, 
+            CAST(ROUND(ConfirmedPerPop, 0) AS INTEGER) AS ConfirmedPerPop,
+            CAST(ROUND(DeathPerPop, 0) AS INTEGER) AS DeathPerPop,
+            CAST(ROUND(RecoveredPerPop, 0) AS INTEGER) AS RecoveredPerPop
+        FROM continents_rates
+        WHERE Date BETWEEN ? AND ?
+        """
+    # Execute SQL query
     df = pd.read_sql_query(query, conn, params=(start_date, end_date))
 
     df_start = df[df["Date"] == str(start_date)]
     df_end = df[df["Date"] == str(end_date)]
 
-    # Merge the dataframes for start and end date to compute rate differences for Confirmed, Deaths
+    # Merge the dataframes for start and end date to compute rate differences
     df_merged = pd.merge(df_end, df_start, on="Continent", suffixes=("_end", "_start"))
 
     # Calculate rate differences
-    df_merged["Confirmed_rate_diff"] = df_merged["Confirmed_rate_end"] - df_merged["Confirmed_rate_start"]
-    df_merged["Death_rate_diff"] = df_merged["Death_rate_end"] - df_merged["Death_rate_start"]
+    df_merged["ConfirmedPerPop_diff"] = df_merged["ConfirmedPerPop_end"] - df_merged["ConfirmedPerPop_start"]
+    df_merged["DeathPerPop_diff"] = df_merged["DeathPerPop_end"] - df_merged["DeathPerPop_start"]
+    df_merged["RecoveredPerPop_diff"] = df_merged["RecoveredPerPop_end"] - df_merged["RecoveredPerPop_start"]
  
-    df_sorted = df_merged.sort_values(by="Confirmed_rate_diff", ascending=True)
+    df_sorted = df_merged.sort_values(by="ConfirmedPerPop_diff", ascending=True)
 
     return df_sorted

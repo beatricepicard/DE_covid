@@ -106,20 +106,29 @@ if st.session_state['page'] == 'worldwide':
         date = st.slider("Select a date:", min_value = min_date, max_value = max_date, value = min_date)
         world_map(connection, date)
 
-        #CONTINENT COMPARISON
-        st.markdown("### Confirmed, Death Rates by Continent")
-        col3, col4 = st.columns(2)
+        #CONTINENT COMPARISON (CASES PER 1 MILLION PEOPLE)
+        st.markdown("### Continent comparison")
+        col1, col2, col3 = st.columns(3)
         connection = sqlite3.connect(db_path)
-        df_continents = get_continent_rates(connection, start_date, end_date).sort_values(by='Confirmed_rate_diff', ascending=True)
+        df_continents = get_continent_rates(connection, start_date, end_date).sort_values(by='ConfirmedPerPop_diff', ascending=True)
 
-        with col3:
-            fig1 = px.bar(df_continents, x="Confirmed_rate_diff", y="Continent", title="Continents' Confirmed Rates", text_auto=".2f", orientation='h', color_discrete_sequence=["#41B6C4"])
+        with col1:
+            fig1 = px.bar(df_continents, x="ConfirmedPerPop_diff", y="Continent", title="Confirmed per 1 million people", orientation='h')
+            fig1.update_traces(marker_color="#41B6C4")  # Set color properly
+            fig1.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""))
             st.plotly_chart(fig1, use_container_width=True)
 
-        with col4:
-            fig2 = px.bar(df_continents, x="Death_rate_diff", y="Continent", title="Continents' Deaths' Rates", text_auto=".2f", orientation='h', color_discrete_sequence=["#78C679"])
+        with col2:
+            fig2 = px.bar(df_continents, x="DeathPerPop_diff", y="Continent", title="Deaths per 1 million people", text_auto=".0f", orientation='h')
+            fig2.update_traces(marker_color="#78C679")  # Set color properly
+            fig2.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""))
             st.plotly_chart(fig2, use_container_width=True)
 
+        with col3:
+            fig3 = px.bar(df_continents, x="RecoveredPerPop_diff", y="Continent", title="Recovered per 1 million people", text_auto=".0f", orientation='h')
+            fig3.update_traces(marker_color="#ADDD8E")  # Set color properly
+            fig3.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""))
+            st.plotly_chart(fig3, use_container_width=True)
 
 
 #Page 2: Continent/ Country data
@@ -220,20 +229,19 @@ elif st.session_state['page'] == 'continent':
         country_data = data[data["Country.Region"] == country].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
         line_chart(country_data, country)
 
+    #COUNTRY COMPARISON (CASES PER 1 MILLION PEOPLE) FOR CHOSEN CONTINENT
     with col7: 
-        #Bar charts for Countries' Cases Rates by Continent
-        st.markdown("### Top Countries by Cases Rates")
+        st.markdown(f"### Countries comparison including {country}")
         #col1, col2, col3 = st.columns(3)
-        df_rates = get_cases_rates(connection, start_date, end_date, continent)
+        df_rates = get_cases_rates(connection, start_date_str, end_date_str, continent)
         num_countries = len(df_rates)
         if num_countries <= 20:
             top_n = num_countries
         else: 
             top_n = 20
-        #countries_list = df_rates["Country"].tolist()
-        df_rates = df_rates.sort_values(by='Confirmed_Rate_diff', ascending=True).head(top_n)
-        #df_rates.to_csv("cases_rates_filtered.csv", index=False)
-
+        
+        df_rates = df_rates.sort_values(by='ConfirmedPerPop_diff', ascending=True).head(top_n)
+       
         if country not in df_rates["Country"].values:
             country_data = get_cases_rates(connection, start_date, end_date, continent).query(f"Country == '{country}'")
             df_rates = pd.concat([df_rates, country_data])
@@ -246,34 +254,30 @@ elif st.session_state['page'] == 'continent':
         recovered_color = ["#D9F0A3" if c == country else "#ADDD8E" for c in df_rates["Country"]]
 
         #with col1:
-        fig1 = px.bar(df_rates, y="Country", x="Confirmed_Rate_diff", orientation="h", title="Confirmed Rate", text_auto=".2f", color=df_rates["Country"], color_discrete_sequence= confirmed_color )
+        fig1 = px.bar(df_rates, y="Country", x="ConfirmedPerPop_diff", orientation="h", title="Confirmed per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence=confirmed_color)
         fig1.update_layout(title_x=0.5)
         fig1.update_yaxes(categoryorder="array", categoryarray=countries_list)
         fig1.update_xaxes(title_text="") 
         fig1.update_layout(yaxis_title="") 
-        fig1.update_layout(xaxis=dict(range=[0, df_rates["Confirmed_Rate_diff"].max() * 1.1]))
-        fig1.update_traces(hovertemplate="%{x:.2f}%")
+        fig1.update_layout(xaxis=dict(range=[0, df_rates["ConfirmedPerPop_diff"].max() * 1.1]))
         st.plotly_chart(fig1)
-        # Bar Chart: Deaths Rate (Keep same order as Confirmed Rate)
+        
         #with col2:
-        fig2 = px.bar(df_rates, y="Country", x="Deaths_Rate_diff", orientation="h", title="Deaths Rate", text_auto=".2f", color=df_rates["Country"], color_discrete_sequence= deaths_color )
+        fig2 = px.bar(df_rates, y="Country", x="DeathsPerPop_diff", orientation="h", title="Deaths per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence= deaths_color)
         fig2.update_layout(title_x=0.5)
         fig2.update_yaxes(categoryorder="array", categoryarray=countries_list)
         fig2.update_xaxes(title_text="") 
         fig2.update_layout(yaxis_title="") 
-        fig2.update_layout(xaxis=dict(range=[0, df_rates["Deaths_Rate_diff"].max() * 1.1]))
-        fig2.update_traces(hovertemplate="%{x:.2f}%")
+        #fig2.update_layout(xaxis=dict(range=[0, df_rates["DeathsPerPop_diff"].max() * 1.1]))
         st.plotly_chart(fig2)
 
-        # Bar Chart: Recovered Rate (Keep same order as Confirmed Rate)
         #with col3:
-        fig3 = px.bar(df_rates, y="Country", x="Recovered_Rate_diff", orientation="h", title="Recovered Rate", text_auto=".2f", color=df_rates["Country"], color_discrete_sequence= recovered_color)
+        fig3 = px.bar(df_rates, y="Country", x="RecoveredPerPop_diff", orientation="h", title="Recovered per 1 million people", text_auto=".0f", color=df_rates["Country"], color_discrete_sequence= recovered_color)
         fig3.update_layout(title_x=0.5)
         fig3.update_yaxes(categoryorder="array", categoryarray=countries_list)
         fig3.update_xaxes(title_text="")  
         fig3.update_layout(yaxis_title="")
-        fig3.update_layout(xaxis=dict(range=[0, df_rates["Recovered_Rate_diff"].max() * 1.1])) 
-        fig3.update_traces(hovertemplate="%{x:.2f}%")
+        fig3.update_layout(xaxis=dict(range=[0, df_rates["RecoveredPerPop_diff"].max() * 1.1])) 
         st.plotly_chart(fig3)
     
      
