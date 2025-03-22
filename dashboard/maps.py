@@ -1,9 +1,7 @@
-import sqlite3
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-import numpy as np
-from datetime import datetime
+
 
 # removes problematic countries that show false data
 def remove_countries(df):

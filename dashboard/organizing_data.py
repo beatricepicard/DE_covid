@@ -1,6 +1,6 @@
 import pandas as pd
 
-def data(df):
+def organizing_data(df):
     df["Date"] = pd.to_datetime(df["Date"])
 
     # Calculate daily changes

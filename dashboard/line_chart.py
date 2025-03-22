@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 
 def line_chart(data, scope_title):
