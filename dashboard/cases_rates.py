@@ -42,6 +42,6 @@ def get_cases_rates(conn, start_date, end_date, continent):
     df_merged["RecoveredPerPop_diff"] = df_merged["RecoveredPerPop_end"] - df_merged["RecoveredPerPop_start"]
 
     # Sort by confirmed cases per population difference
-    df_sorted = df_merged.sort_values(by="ConfirmedPerPop_diff", ascending=True)
+    df_sorted = df_merged.sort_values(by="ConfirmedPerPop_diff", ascending=False)
 
     return df_sorted

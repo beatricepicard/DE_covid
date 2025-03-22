@@ -141,7 +141,7 @@ elif st.session_state['page'] == 'continent':
         #COUNTRY COMPARISON (CASES PER 1 MILLION PEOPLE) FOR CHOSEN CONTINENT
         col7 = st.columns(1)[0] 
         with col7: 
-            st.markdown(f"### Top 10 Countries of {continent} including {country}")
+            st.markdown(f"### Top Affected Countries of {continent} and {country} for selected period")
             col1, col2, col3 = st.columns(3)
             df_rates = get_cases_rates(connection, start_date_str, end_date_str, continent)
             num_countries = len(df_rates)
@@ -150,14 +150,12 @@ elif st.session_state['page'] == 'continent':
             else: 
                 top_n = 15
             
-            df_rates = df_rates.sort_values(by='ConfirmedPerPop_diff', ascending=True).head(top_n)
+            df_rates = df_rates.head(top_n)
             
             if country not in df_rates["Country"].values:
                 country_data = get_cases_rates(connection, start_date_str, end_date_str, continent).query(f"Country == '{country}'")
                 df_rates = pd.concat([df_rates, country_data])
-
-            df_rates["Country"] = pd.Categorical(df_rates["Country"], categories=df_rates["Country"], ordered=True)
-            countries_list = df_rates["Country"].tolist()
+                df_rates = df_rates.sort_values(by="ConfirmedPerPop_diff", ascending=False)
 
             confirmed_color = ["#D9F0A3" if c == country else "#41B6C4" for c in df_rates["Country"]]
             deaths_color = ["#D9F0A3" if c == country else "#78C679" for c in df_rates["Country"]]
@@ -167,7 +165,7 @@ elif st.session_state['page'] == 'continent':
                 fig1 = px.bar(df_rates, y="Country", x="ConfirmedPerPop_diff", orientation="h", title="Confirmed per 1 million people", color=df_rates["Country"], color_discrete_sequence=confirmed_color)
                 fig1.update_layout(showlegend=False, height=300, margin=dict(t=30, b=0, l=0, r=20))
                 fig1.update_xaxes(dict(range=[0, df_rates["ConfirmedPerPop_diff"].max() * 1.1]), showticklabels=False, title="")
-                fig1.update_yaxes(title="", categoryorder="array", categoryarray=countries_list, tickfont=dict(size=12), tickangle=0, tickmode='linear')
+                fig1.update_yaxes(title="", categoryorder="array", tickfont=dict(size=12), tickangle=0, tickmode='linear')
                 fig1.update_traces(texttemplate='%{x:.0f}', textposition='outside',cliponaxis=False) 
                 st.plotly_chart(fig1, use_container_width=True)
                 
@@ -175,7 +173,7 @@ elif st.session_state['page'] == 'continent':
                 fig2 = px.bar(df_rates, y="Country", x="DeathsPerPop_diff", orientation="h", title="Deaths per 1 million people", color=df_rates["Country"], color_discrete_sequence= deaths_color)
                 fig2.update_layout(showlegend=False, height=300, margin=dict(t=30, b=0, l=0, r=20))
                 fig2.update_xaxes(dict(range=[0, df_rates["DeathsPerPop_diff"].max() * 1.1]), showticklabels=False, title="")
-                fig2.update_yaxes(title="", categoryorder="array", categoryarray=countries_list, tickfont=dict(size=12), tickangle=0, tickmode='linear')
+                fig2.update_yaxes(title="", categoryorder="array", tickfont=dict(size=12), tickangle=0, tickmode='linear')
                 fig2.update_traces(texttemplate='%{x:.0f}', textposition='outside',cliponaxis=False)
                 st.plotly_chart(fig2, use_container_width=True)
 
@@ -183,7 +181,7 @@ elif st.session_state['page'] == 'continent':
                 fig3 = px.bar(df_rates, y="Country", x="RecoveredPerPop_diff", orientation="h", title="Recovered per 1 million people", color=df_rates["Country"], color_discrete_sequence= recovered_color)
                 fig3.update_layout(showlegend=False, height=300, margin=dict(t=30, b=0, l=0, r=20))
                 fig3.update_xaxes(dict(range=[0, df_rates["RecoveredPerPop_diff"].max() * 1.1]), showticklabels=False, title="")
-                fig3.update_yaxes(title="", categoryorder="array", categoryarray=countries_list, tickfont=dict(size=12), tickangle=0, tickmode='linear')
+                fig3.update_yaxes(title="", categoryorder="array", tickfont=dict(size=12), tickangle=0, tickmode='linear')
                 fig3.update_traces(texttemplate='%{x:.0f}', textposition='outside',cliponaxis=False)
                 st.plotly_chart(fig3, use_container_width=True)
 
