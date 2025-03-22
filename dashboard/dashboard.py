@@ -7,14 +7,14 @@ import plotly.express as px
 import matplotlib.dates as mdates
 
 #functions
-from line_chart import line_chart
-from functions_dashboard import calculate_sir_parameters 
+from line_chart import line_chart, line_chart2
 from maps import continent_map, world_map
 from cases_rates import get_cases_rates
 from continent_rate_comparison import get_continent_rates
-from design import design
+from design import design_global, design_continent
 from organizing_data import data
 from date import date
+from sir_model import sir_model
 
 # Streamlit Pages Layout 
 st.set_page_config(layout = "wide")
@@ -41,7 +41,6 @@ st.sidebar.title("Filters")
 #date selection
 start_date, end_date, start_date_str, end_date_str, start_date_dt, end_date_dt = date(df)
 
-
 data = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
 continents = sorted(df["Continent"].dropna().unique())
 
@@ -57,7 +56,6 @@ if continent != "the world" and continent != st.session_state["continent"]:
 if st.session_state['page'] == 'worldwide':
     st.title("COVID-19 Dashboard")
     st.header("Global Data")
-
 
     world_data = data.groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
     scope_title = "global"
@@ -96,7 +94,7 @@ if st.session_state['page'] == 'worldwide':
         fig3.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""), height = 250, margin=dict(t=30, b=0, l=0, r=40))
         st.plotly_chart(fig3, use_container_width=True)
 
-#Page 2: Continent/ Country data
+#Page 2: Continent/Country Data
 elif st.session_state['page'] == 'continent':
     tab1, tab2, tab3 = st.tabs(["Continent Data", "Country Data", "SIR-Model"])
     continent = st.session_state.get('continent')
@@ -109,28 +107,40 @@ elif st.session_state['page'] == 'continent':
         st.session_state['page'] = "worldwide"
         st.rerun()
 
+#Page2.1: Continent Data
     with tab1:
+        st.header(continent)
         col1, col2= st.columns([1,1])
+        continent_data = data[data["Continent"] == continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
 
         with col1: 
-            st.header(f"{continent}")
-
-            #Line charts for continent
-            continent_data = data[data["Continent"] == continent].groupby("Date")[["Daily New Cases", "Daily New Deaths", "Daily New Recoveries", "Confirmed", "Deaths", "Recovered"]].sum().reset_index()
-            line_chart(continent_data, continent)  
+            line_chart2(continent_data, continent)  
 
         with col2: 
             #Create Continent Map 
-            if continent == "Australia/Oceania":
-                st.warning("No map available for Australia/Oceania.")
-            else:
-                min_date = start_date_dt
-                max_date = end_date_dt
-                continent_date = st.slider("Select a date:", min_value = start_date_dt, max_value = end_date_dt, value = start_date_dt)
-                continent_map(connection, continent, continent_date)
+            col_metrics1, col_metrics2, col_metrics3 = st.columns(3)
+            with col_metrics1:
+                with st.container():
+                    st.metric(label="Total Confirmed Cases", value=f"{int(continent_data['Confirmed'].max()):,}")
+            with col_metrics2:
+                with st.container():
+                    st.metric(label="Total Deaths", value=f"{int(continent_data['Deaths'].max()):,}")
+            with col_metrics3:
+                with st.container():
+                    st.metric(label="Total Recovered Cases", value=f"{int(continent_data['Recovered'].max()):,}")
+            
+    
+            with st.container():
+                if continent == "Australia/Oceania":
+                    st.warning("No map available for Australia/Oceania.")
+                else:
+                    min_date = start_date_dt
+                    max_date = end_date_dt
+                    continent_date = st.slider("Select a date:", min_value = start_date_dt, max_value = end_date_dt, value = start_date_dt)
+                    continent_map(connection, continent, continent_date)
 
+#Page2.2: Country Data
     with tab2:
-        st.subheader("COVID-19 Data by Country")
         col6 = st.columns(1)[0] 
         with col6:
             #line charts for country
@@ -187,75 +197,25 @@ elif st.session_state['page'] == 'continent':
                 fig3.update_traces(texttemplate='%{x:.0f}', textposition='outside',cliponaxis=False)
                 st.plotly_chart(fig3, use_container_width=True)
 
+
+#Page2.3: SIR-Model
     with tab3:
-        st.subheader("SIR-Model")
-         #SIR-Model per country
-        # Get dataframe from database
-        query_combine = "SELECT * FROM new_complete"
-        df_sir = pd.read_sql(query_combine, connection)
-
-        df_sir["Susceptible"] = df_sir["Population"] - df_sir["Active"].fillna(0) - df_sir["Deaths"].fillna(0) - df_sir["Recovered"].fillna(0)
-        df_sir["mu"] = float("nan")
-        df_sir["gamma"] = 1 / 4.5
-        df_sir["beta"] = float("nan")
-        df_sir["alpha"] = float("nan")
-        df_sir["R0"] = float("nan")
-
-        st.header("The SIR Model")
-        with st.expander("Click for explanation"):
-            st.text("The spread of epidemics is often described using the SIR model, which tracks individuals in a population as Susceptible (S), Infected (I), or Recovered (R). In this case, an additional category is included: Deceased (D).")
-            st.text("Each day, individuals can either remain in their current state or transition to an adjacent state. For example, an infected person can recover, succumb to the disease, or stay infected, while a deceased individual remains in that state permanently.")
-            st.text("The daily changes in the population are governed by the following equations:")
-            st.latex(r"\Delta S(t) = \alpha R(t) - \beta S(t) \frac{I(t)}{N}")
-            st.latex(r"\Delta I(t) = \beta S(t) \frac{I(t)}{N} - \mu I(t) - \gamma I(t)")
-            st.latex(r"\Delta R(t) = \gamma I(t) - \alpha R(t)")
-            st.latex(r"\Delta D(t) = \mu I(t)")
-            st.text("By estimating the parameters for each country, we can fill in missing values, leading to better predictive performance.")
-            st.subheader("What is R0?")
-            st.text("R0, or the basic reproduction number, represents the average number of secondary infections generated by a single infected individual in a completely susceptible population.")
-            st.text("If R0 > 1, the infection can spread in the population. If R0 < 1, the infection will eventually die out.")
-
-        # Columns for SIR parameters and R0 chart
-        col4, col5 = st.columns([1, 1], gap="medium")
-        with col4:
-            if country:
-                try:
-                    df_sir = calculate_sir_parameters(country, df_sir)
-                    country_params = df_sir[df_sir["Country"] == country]
-
-                    st.subheader(f"Parameters for {country}")
-                    st.write(f"**Adjustment Factor (α):** {country_params['alpha'].values[0]:.4f}")
-                    st.write(f"**Transmission Rate (β):** {country_params['beta'].values[0]:.4f}")
-                    st.write(f"**Recovery Rate (γ):** {country_params['gamma'].values[0]:.4f}")
-                    st.write(f"**Mortality Rate (μ):** {country_params['mu'].values[0]:.4f}")
-                except Exception as e:
-                    st.error(f"Error calculating parameters for {country}: {str(e)}")
-
-        with col5:
-            st.subheader(f"R0 Over Time for {country}")
-            fig, ax = plt.subplots()
-            df_sir["Date"] = pd.to_datetime(df_sir["Date"])
-            start_date = pd.to_datetime(start_date)
-            end_date = pd.to_datetime(end_date)
-            ax.plot(df_sir["Date"], df_sir["R0"], marker='o', linestyle='-', color= "#225EA8")
-            ax.set_xlim(mdates.date2num(start_date), mdates.date2num(end_date))
-            ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-            plt.xticks(rotation=45)
-            ax.set_xlabel("Date")
-            ax.set_ylabel("R0")
-            ax.set_title(f"R0 Over Time for {country}")
-            st.pyplot(fig)
+        sir_model(connection, country, start_date, end_date)
 
 
-    st.sidebar.write("---")
-    if st.sidebar.button("Back to Global Data"):
-        st.session_state['page'] = 'worldwide'
-        st.session_state['continent'] = None
-        st.session_state["country"] = None
-        st.rerun()
+#Back to Glonbal Data Button @Sidebar
+st.sidebar.write("---")
+if st.sidebar.button("Back to Global Data"):
+    st.session_state['page'] = 'worldwide'
+    st.session_state['continent'] = None
+    st.session_state["country"] = None
+    st.rerun()
 
 
 #design-stuff
-design()
+if st.session_state['page'] == "worldwide":
+    design_global()
+else:
+    design_continent()
+
 connection.close()                                          
