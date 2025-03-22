@@ -1,14 +1,5 @@
 import pandas as pd
 
-'''The function is used for creating a visualisation 
-"Countries comparison including selected country" on the "COVID-19 Dashboard" by:
-- Retrieving data from covid_database table "new_complete" for different countries.
-- Filtering data by continent if a specific one is selected.
-- Converting case rates by population to cases per million people for better readability.
-- Calculating changes in cases metrics between a specified start and end date. 
-- Sorting the results based on confirmed case rate differences.
-- Providing a structured dataset for further visualization'''
-
 def get_cases_rates(conn, start_date, end_date, continent):
 
     # Base SQL query

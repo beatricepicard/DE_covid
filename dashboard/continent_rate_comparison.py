@@ -1,12 +1,5 @@
 import pandas as pd
 
-'''The function is used for creating a visualisation 
-"Continent comparison" on the "COVID-19 Dashboard" by:
-- Retrieving data from covid_database table "continents_rates" for different continents.
-- Calculating changes in these metrics between a specified start and end date.
-- Sorting the results based on confirmed case rate differences.
-- Providing a structured dataset for further visualization'''
-
 def get_continent_rates(conn, start_date, end_date):
 
     start_date = start_date.strftime('%m/%d/%Y')
