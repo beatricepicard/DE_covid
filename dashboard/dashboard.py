@@ -16,7 +16,7 @@ from country_data import country_data
 st.set_page_config(layout = "wide")
 
 #Sample data
-db_path = "../data/covid_database.db"
+db_path = "covid_database.db"
 connection = sqlite3.connect(db_path)
 df = pd.read_sql("SELECT Date, Country, Continent, Confirmed, Deaths, Recovered FROM new_complete", connection)
 
