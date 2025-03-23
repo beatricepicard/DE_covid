@@ -27,15 +27,15 @@ def country_data(data, connection, start_date_str, end_date_str, continent, coun
             top_n = 15
                 
         df_rates = df_rates.head(top_n)
-                
+
+        confirmed_color = ["#D9F0A3" if c == country else "#41B6C4" for c in df_rates["Country"]]
+        deaths_color = ["#D9F0A3" if c == country else "#78C679" for c in df_rates["Country"]]
+        recovered_color = ["#D9F0A3" if c == country else "#ADDD8E" for c in df_rates["Country"]]
+
         if country not in df_rates["Country"].values:
             country_data = get_cases_rates(connection, start_date_str, end_date_str, continent).query(f"Country == '{country}'")
             df_rates = pd.concat([df_rates, country_data])
             df_rates = df_rates.sort_values(by="ConfirmedPerPop_diff", ascending=False)
-
-            confirmed_color = ["#D9F0A3" if c == country else "#41B6C4" for c in df_rates["Country"]]
-            deaths_color = ["#D9F0A3" if c == country else "#78C679" for c in df_rates["Country"]]
-            recovered_color = ["#D9F0A3" if c == country else "#ADDD8E" for c in df_rates["Country"]]
 
     with col1:
         fig1 = px.bar(df_rates, y="Country", x="ConfirmedPerPop_diff", orientation="h", title="Confirmed per 1 million people", color=df_rates["Country"], color_discrete_sequence=confirmed_color)
