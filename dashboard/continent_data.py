@@ -23,7 +23,7 @@ def continent_data(data, connection, continent , start_date_dt, end_date_dt):
                         st.metric(label="Total Deaths", value=f"{int(continent_data['Deaths'].max()):,}")
                 with col_metrics3:
                     with st.container():
-                        st.metric(label="Total Recovered Cases", value=f"{int(continent_data['Recovered'].max()):,}")
+                        st.metric(label="Total Recoveries", value=f"{int(continent_data['Recovered'].max()):,}")
                 
         
                 with st.container():
