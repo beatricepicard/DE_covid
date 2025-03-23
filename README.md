@@ -91,6 +91,7 @@ The repository includes the following files and folders:
 📂 **scripts/** - Files created during the course for practice purposes *(not required for the dashboard)*.
 > **Note:** These scripts were made for testing and learning during the Data Engineering course. They are **not used** in the Streamlit dashboard.  
 > **Note:** You can run them by calling `main.py`.
+
 - `main.py`: Runs a combination of tasks: shows charts, runs a SIR simulation, compares death rates, and queries the database.
 - `aggregation.py`: Aggregates COVID stats by country, county, and continent.
 - `aufgabe3melanie.py`: Estimates death rates by continent and finds top 5 US counties for deaths and cases.
@@ -110,8 +111,6 @@ The repository includes the following files and folders:
 - `plot_country.py`: Plots total COVID stats over time for a single selected country.
 - `SIRmodel.py`: Contains helper functions for estimating and simulating SIR model behavior.
 - `top_populated_countries_covid_rates.py`: Compares active, death, and recovery rates across the 20 most populated countries.
-
-
 
 
 ## Project Link

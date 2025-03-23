@@ -17,7 +17,7 @@ def country_data(data, connection, start_date_str, end_date_str, continent, coun
     #COUNTRY COMPARISON (CASES PER 1 MILLION PEOPLE) FOR CHOSEN CONTINENT
     col7 = st.columns(1)[0] 
     with col7: 
-        st.markdown(f"### Top Affected Countries of {continent} and {country} for selected period")
+        st.markdown(f"### Ranking of {country} within Top Affected Countries of {continent} for selected period")
         col1, col2, col3 = st.columns(3)
         df_rates = get_cases_rates(connection, start_date_str, end_date_str, continent)
         num_countries = len(df_rates)

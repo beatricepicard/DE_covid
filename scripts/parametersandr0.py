@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 
-csv_path = r"C:\Users\irini\OneDrive\Desktop\uptodate2\DE_Covid\complete.csv"
-database_path = r"C:\Users\irini\OneDrive\Desktop\uptodate2\DE_Covid\data\covid_database.db"
+csv_path = r"..\data\complete.csv"
+database_path = r"..\data\covid_database.db"
 df_complete = pd.read_csv(csv_path)
 
 df_complete.rename(columns={"Country.Region": "Country"}, inplace=True)
