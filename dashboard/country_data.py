@@ -58,7 +58,7 @@ def country_data(data, connection, start_date_str, end_date_str, continent, coun
         recovered_color = ["#D9F0A3" if c == country else "#ADDD8E" for c in df_rates["Country"]]
 
         with col3:
-            fig3 = px.bar(df_rates, y="Country", x="RecoveredPerPop_diff", orientation="h", title="Recovered per 1 million people", color=df_rates["Country"], color_discrete_sequence= recovered_color)
+            fig3 = px.bar(df_rates, y="Country", x="RecoveredPerPop_diff", orientation="h", title="Recoveries per 1 million people", color=df_rates["Country"], color_discrete_sequence= recovered_color)
             fig3.update_layout(showlegend=False, height=300, margin=dict(t=30, b=0, l=0, r=20))
             fig3.update_xaxes(dict(range=[0, df_rates["RecoveredPerPop_diff"].max() * 1.1]), showticklabels=False, title="")
             fig3.update_yaxes(title="", categoryorder="array", tickfont=dict(size=12), tickangle=0, tickmode='linear')
