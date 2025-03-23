@@ -33,11 +33,15 @@ def global_data(data, db_path, connection, start_date, end_date, start_date_dt, 
         fig1.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""), height = 250, margin=dict(t=30, b=0, l=0, r=40), autosize=True)
         st.plotly_chart(fig1, use_container_width=True)
 
+    df_continents = get_continent_rates(connection, start_date, end_date).sort_values(by='DeathPerPop_diff', ascending=True) 
+    
     with col2:
         fig2 = px.bar(df_continents, x="DeathPerPop_diff", y="Continent", title="Deaths per 1 million people", text_auto=".0f", orientation='h')
         fig2.update_traces(marker_color="#78C679", textposition='outside', cliponaxis=False) 
         fig2.update_layout(xaxis=dict(title="", showticklabels=False), yaxis=dict(title=""), height = 250, margin=dict(t=30, b=0, l=0, r=40), autosize=True)
         st.plotly_chart(fig2, use_container_width=True)
+
+    df_continents = get_continent_rates(connection, start_date, end_date).sort_values(by='RecoveredPerPop_diff', ascending=True)
 
     with col3:
         fig3 = px.bar(df_continents, x="RecoveredPerPop_diff", y="Continent", title="Recovered per 1 million people", text_auto=".0f", orientation='h')

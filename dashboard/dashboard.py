@@ -60,7 +60,7 @@ elif st.session_state['page'] == 'continent':
     country = st.sidebar.selectbox( "Select Country", list(countries_by_continent), index=countries_by_continent.index(st.session_state["country"]) if st.session_state["country"] in countries_by_continent else 0)
     st.session_state["country"] = country
 
-    if not continent:
+    if continent == "the world":
         st.session_state['page'] = "worldwide"
         st.rerun()
 
