@@ -5,8 +5,8 @@ import matplotlib.dates as mdates
 import numpy as np
 import shutil
 
-csv_path = r"C:\Users\irini\OneDrive\Desktop\uptodate4\DE_Covid\data\complete.csv"
-database_path = r"C:\Users\irini\OneDrive\Desktop\uptodate4\DE_Covid\data\covid_database.db"
+csv_path = r"..\data\complete.csv"
+database_path = r"..\data\covid_database.db"
 
 conn = sqlite3.connect(database_path)
 cursor = conn.cursor()
