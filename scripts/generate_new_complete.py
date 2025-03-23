@@ -1,10 +1,7 @@
 import sqlite3
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import numpy as np
-import shutil
-import datetime
+
 
 # Function that calculates the SIR parameters in order to fill in the missing values in the data frame
 def calculate_sir_parameters(country_name, df):

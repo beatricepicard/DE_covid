@@ -1,15 +1,21 @@
+#libraries
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdts
-import numpy as np
-import datetime as datetime
 import sqlite3
 
-'''
+#functions
+from graphical_display import date
+from SIRmodel import estimate_parameters, update_SIR_model, plot_SIR
+from aufgabe3melanie import data, death_rate_by_continent, plot_death_rate, top_us_counties
+from aggregation import aggregation
+from groupings import group_by_country, group_by_state
+from country_summary import country_summary
+from plot_country import plot_country_statistics
+from plot_aggregated_data import plot_aggregated_data
+from europe_maps import continent_map
+
+
 #part1
 #subexcerside 1.1.: graphical display
-from graphical_display import date
-
 df = pd.read_csv("../data/day_wise.csv")
 df["Date"] = pd.to_datetime(df["Date"])
 
@@ -18,8 +24,6 @@ date(df)
 
 #part1
 #subexcerside 1.2.: SIR model
-from SIRmodel import estimate_parameters, update_SIR_model, plot_SIR
-
 #find initial conditions
 I_0 = df['Active'].iloc[0]
 R_0 = df['Recovered'].iloc[0]
@@ -48,12 +52,7 @@ for t in range(1, days):
 
 updated_df = pd.DataFrame({'Day': range(days), 'Susceptible': S, 'Infected': I, 'Recovered': R, 'Died': D})
 plot_SIR(updated_df, R0, days)
-'''
-# Connection to the database
-connection = sqlite3.connect("../data/covid_database.db")
-cursor = connection.cursor()
-'''
-from aufgabe3melanie import data, death_rate_by_continent, plot_death_rate, top_us_counties
+
 
 #part3.5: Death rate by continent
 path = r"../data/covid_database.db"
@@ -76,50 +75,36 @@ cursor = connection.cursor()
 
 # Add complete.csv to the database
 df = pd.read_csv("../data/complete.csv")
-
 tablename = "complete"
 df.to_sql(tablename, connection, if_exists="replace")
-
-# print(df.duplicated())
-
 cleaned_df = df.drop_duplicates()
-cleaned_df.sample()
 
-# print(cleaned_df)
-# print(sum(cleaned_df.duplicated()))
+
+
 
 # Part 4 bullet 4
-from groupings import group_by_country, group_by_state
 group_by_country(connection)
 group_by_state(connection)
 
-#Country Aggregation:
-from aggregation import aggregation
-
+#Country Aggregation
 df_country, df_county, df_continent = aggregation(cleaned_df, connection)
 print("Country Aggregation:", df_country, "County Aggregation:", df_county, "Continent Aggregation:", df_continent)
 
 
 #extract COVID-19 data per country
-from country_summary import country_summary
 country_name = input("Enter the country name: ")
 country_stats = country_summary(country_name, connection)
 print(country_stats)
-
-from plot_country import plot_country_statistics
-from plot_aggregated_data import plot_aggregated_data
 
 #plot country statistics
 plot_country_statistics(country_name, connection)
 plot_aggregated_data(df_country, "Country.Region")
 
-'''
 
-from europe_maps import continent_map, world_map, add_missing_countries
 continent = "Europe"
 continent_map(connection, continent)
-# world_map(connection)
 
+# world_map(connection)
 tables = {'country_wise', 'day_wise', 'usa_county_wise', 'worldometer_data'}
 
 for table in tables:
@@ -146,8 +131,6 @@ for table in tables:
         print(entry)
     
     print("-" * 50)
-
-
 
 connection.close()
 

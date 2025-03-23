@@ -1,7 +1,5 @@
 
 import pandas as pd
-import sqlite3
-
 
 def aggregation(cleaned_df, connection):
     worldometer_df = pd.read_sql("SELECT * FROM worldometer_data", connection)

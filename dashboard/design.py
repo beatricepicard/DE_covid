@@ -122,26 +122,6 @@ def design_continent():
             box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        /* SLIDER THUMB (dot) */
-        div[data-baseweb="slider"] div[role="slider"] {
-            background-color: #007BFF !important;
-            border: none !important;
-        }
-
-        /* LEFT SIDE (selected range) — make it blue */
-        div[data-baseweb="slider"] > div > div:nth-child(2) {
-            background-color: #007BFF !important;
-        }
-
-        /* RIGHT SIDE (unselected range) — default gray, no change needed */
-
-        /* SELECTED DATE TEXT (above the slider) */
-        div[data-baseweb="slider"] span {
-            color: #007BFF !important;
-            font-weight: 600;
-        }
-
-
         /* HEADINGS */
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Montserrat', sans-serif;
