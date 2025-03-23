@@ -44,12 +44,12 @@ def design_global():
             box-shadow: none; /* Optional: add light shadow */
         }
 
-        /* Change tab text color */
-        div[data-baseweb="tab"] {
-            color: black !important;
-            font-weight: bold !important;
+        /* Remove margin and padding from individual components too */
+        .stPlotlyChart, .stMetric, .stDataFrame, .stSlider, .stSelectbox, .stNumberInput {
+            margin: 0px !important;
+            padding: 4px !important;  /* You can even lower this to 2px or 0px if needed */
         }
-        
+
         /* Change selected tab text and underline color */
         div[data-baseweb="tab-list"] div[aria-selected="true"] {
             color: #007BFF !important;
@@ -114,13 +114,6 @@ def design_continent():
             font-family: 'Montserrat', sans-serif;
         }
 
-        /* SLIDER CONTAINER */
-        div[data-baseweb="slider"] {
-            background-color: white !important;
-            padding: 10px;
-            border-radius: 6px;
-            box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
-        }
 
         /* HEADINGS */
         h1, h2, h3, h4, h5, h6 {
@@ -128,14 +121,44 @@ def design_continent():
             font-weight: 700;
         }
 
-        /* Remove white backgrounds from layout wrappers */
-        div[data-testid="stHorizontalBlock"] > div,
-        div[data-testid="column"] {
+        div {
             background-color: transparent !important;
+        }
+
+        /* Add white background ONLY to inner content (components) */
+        .stPlotlyChart, .stMetric, .stDataFrame, .stSlider, .stSelectbox, .stNumberInput {
+            background-color: white !important;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 6px 0px;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px;
+        }
+
+        /* Constrain charts */
+        .stPlotlyChart, .stAltairChart, .stEchartsChart {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Reduce vertical spacing between Streamlit containers */
+        div[data-testid="stVerticalBlock"] > div {
+            margin-bottom: 0px !important;  /* You can adjust 4px to 2px or 0px if needed */
+        }
+
+        /* Remove margin and padding from individual components too */
+        .stPlotlyChart, .stMetric, .stDataFrame, .stSlider, .stSelectbox, .stNumberInput {
+            margin: 0px !important;
+            padding: 4px !important;  /* You can even lower this to 2px or 0px if needed */
+        }
+
+        .stContainer {
             padding: 0px !important;
             margin: 0px !important;
-            border-radius: 0px !important;
-            box-shadow: none !important;
+            background-color: white !important;
+            border-radius: 6px;
+            box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         /* TABS */

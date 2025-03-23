@@ -78,7 +78,7 @@ elif st.session_state['page'] == 'continent':
         sir_model(connection, country, start_date, end_date)
 
 
-#Back to Glonbal Data Button @Sidebar
+#Back to Global Data Button @Sidebar
 st.sidebar.write("---")
 if st.sidebar.button("Back to Global Data"):
     st.session_state['page'] = 'worldwide'
