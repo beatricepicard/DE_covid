@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import streamlit as st
+import plotly.express as px
 
 
 def calculate_sir_parameters(country_name, df):
@@ -15,8 +16,13 @@ def calculate_sir_parameters(country_name, df):
    country_df["DeltaR"] = country_df["Recovered"].diff()
    country_df["DeltaD"] = country_df["Deaths"].diff()
 
-   country_df["alpha"] = (-country_df["DeltaR"] + country_df["gamma"] * country_df["Recovered"]) / country_df["Recovered"]
-   country_df["beta"] = (-country_df["DeltaS"] + country_df["alpha"] * country_df["Recovered"])* country_df["Population"] / (country_df["Susceptible"] * country_df["Active"])
+   epsilon = 1e-10 #avoid division by0
+   recovered_nonzero = country_df["Recovered"].replace(0, epsilon)
+   denominator_for_beta = (country_df["Susceptible"] * country_df["Active"]).replace(0, epsilon)
+   country_df["alpha"] = (-country_df["DeltaR"] + country_df["gamma"] * country_df["Recovered"]) / recovered_nonzero
+   country_df["alpha"] = country_df["alpha"].clip(lower=0, upper=1)
+   country_df["beta"] = (-country_df["DeltaS"] + country_df["alpha"] * country_df["Recovered"])* country_df["Population"] / denominator_for_beta
+   country_df["beta"] = country_df["beta"].clip(lower=0, upper=1)
    country_df["mu"] = country_df["DeltaD"] / country_df["Active"]
    country_df["R0"] = country_df["beta"] / country_df["gamma"]
    
@@ -95,10 +101,7 @@ def sir_model(connection, country, start_date, end_date):
                 start_date = pd.to_datetime(start_date)
                 end_date = pd.to_datetime(end_date)
                 valid_r0 = df_sir[df_sir["R0"].notna()]
-                ax.plot(valid_r0["Date"], valid_r0["R0"], linestyle='-', color="#225EA8")
-                ax.set_xlim(mdates.date2num(start_date), mdates.date2num(end_date))
-                ax.xaxis.set_major_locator(mdates.AutoDateLocator())
-                ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-                plt.xticks(rotation=0)
-                ax.set_ylabel("R0")
-                st.pyplot(fig)
+                fig = px.line(valid_r0, x="Date", y="R0", title="R₀ Over Time", markers=False)
+                fig.update_traces(line=dict(color="#225EA8"), hovertemplate='Date: %{x|%b %d, %Y}<br>R₀: %{y:.2f}<extra></extra>')
+                fig.update_layout(xaxis=dict(title="", tickformat="%b %Y"), yaxis=dict(title=""), height=250, margin=dict(t=30, b=0, l=0, r=40), autosize=True, hovermode="x unified")
+                st.plotly_chart(fig, use_container_width=True)
