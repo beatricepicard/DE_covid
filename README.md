@@ -78,6 +78,7 @@ The repository includes the following files and folders:
 - `organizing_data.py`: Prepares raw data by calculating daily changes.
 - `design.py`: Adds custom CSS styles for a clean dashboard look.
 - `get_countries.py`: Helper to extract list of countries from the database.
+- `requirements.txt`: Indicates package dependencies for dashboard deployment.
 
 
 📂 **data/** — Contains all datasets used for the project.
@@ -90,26 +91,26 @@ The repository includes the following files and folders:
 📂 **scripts/** - Files created during the course for practice purposes *(not required for the dashboard)*.
 > **Note:** These scripts were made for testing and learning during the Data Engineering course. They are **not used** in the Streamlit dashboard.  
 > **Note:** You can run them by calling `main.py`.
-- `main.py` | Runs a combination of tasks: shows charts, runs a SIR simulation, compares death rates, and queries the database.
-- `aggregation.py` | Aggregates COVID stats by country, county, and continent. |
-- `aufgabe3melanie.py` | Estimates death rates by continent and finds top 5 US counties for deaths and cases. |
-- `cases_by_country_pie_chart.py` | Creates a pie chart of active, recovered, and death cases for a specific country. |
-- `Cases_by_country_time_series.py` | Visualizes COVID case rates over time as a percentage of population (light + dark themes). |
-- `country_summary.py` | Returns a dictionary with key figures (total cases, deaths, etc.) for a selected country. |
-- `europe_maps.py` | Generates choropleth maps for Europe and the world showing active cases per population. |
-- `fill_in_nans.py` | Fills missing data in the dataset using estimated SIR parameters and updates the CSV. |
-- `generate_new_complete.py` | Generates a new, cleaned and complete version of the dataset using grouping and model estimation. |
-- `graphical_display.py` | Creates basic time series charts of new cases, deaths, and recoveries between user-defined dates. |
-- `groupings.py` | Groups and summarizes data by country or US state. |
-- `insertiong_lacking_population.py` | Inserts missing population data directly into the SQLite database. |
-- `new_table_continents_rates.py` | Creates the `continents_rates` table with normalized COVID stats (per 1M pop). |
-- `parametersandr0.py` | Calculates and plots the evolution of SIR parameters and R₀ for a selected country. |
-- `parameters_for_country.py` | Estimates SIR model parameters directly using new/deaths/recovered per day. |
-- `plot_aggregated_data.py` | Bar plot comparing confirmed, recovered, active, and deaths across top 10 entities. |
-- `plot_country.py` | Plots total COVID stats over time for a single selected country. |
-- `SIRmodel.py` | Contains helper functions for estimating and simulating SIR model behavior. |
-- `top_populated_countries_covid_rates.py` | Compares active, death, and recovery rates across the 20 most populated countries. |
 
+- `main.py`: Runs a combination of tasks: shows charts, runs a SIR simulation, compares death rates, and queries the database.
+- `aggregation.py`: Aggregates COVID stats by country, county, and continent.
+- `aufgabe3melanie.py`: Estimates death rates by continent and finds top 5 US counties for deaths and cases.
+- `cases_by_country_pie_chart.py`: Creates a pie chart of active, recovered, and death cases for a specific country.
+- `Cases_by_country_time_series.py`: Visualizes COVID case rates over time as a percentage of population (light + dark themes).
+- `country_summary.py`: Returns a dictionary with key figures (total cases, deaths, etc.) for a selected country.
+- `europe_maps.py`: Generates choropleth maps for Europe and the world showing active cases per population.
+- `fill_in_nans.py`: Fills missing data in the dataset using estimated SIR parameters and updates the CSV.
+- `generate_new_complete.py`: Generates a new, cleaned and complete version of the dataset using grouping and model estimation.
+- `graphical_display.py`: Creates basic time series charts of new cases, deaths, and recoveries between user-defined dates.
+- `groupings.py`: Groups and summarizes data by country or US state.
+- `insertiong_lacking_population.py`: Inserts missing population data directly into the SQLite database.
+- `new_table_continents_rates.py`: Creates the `continents_rates` table with normalized COVID stats (per 1M pop).
+- `parametersandr0.py`: Calculates and plots the evolution of SIR parameters and R₀ for a selected country.
+- `part3bullet2.py`: Estimates SIR model parameters directly using new/deaths/recovered per day.
+- `plot_aggregated_data.py`: Bar plot comparing confirmed, recovered, active, and deaths across top 10 entities.
+- `plot_country.py`: Plots total COVID stats over time for a single selected country.
+- `SIRmodel.py`: Contains helper functions for estimating and simulating SIR model behavior.
+- `top_populated_countries_covid_rates.py`: Compares active, death, and recovery rates across the 20 most populated countries.
 
 
 ## Project Link
