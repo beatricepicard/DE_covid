@@ -104,7 +104,7 @@ The repository includes the following files and folders:
 - `insertiong_lacking_population.py` | Inserts missing population data directly into the SQLite database. |
 - `new_table_continents_rates.py` | Creates the `continents_rates` table with normalized COVID stats (per 1M pop). |
 - `parametersandr0.py` | Calculates and plots the evolution of SIR parameters and R₀ for a selected country. |
-- `part3bullet2.py` | Estimates SIR model parameters directly using new/deaths/recovered per day. |
+- `parameters_for_country.py` | Estimates SIR model parameters directly using new/deaths/recovered per day. |
 - `plot_aggregated_data.py` | Bar plot comparing confirmed, recovered, active, and deaths across top 10 entities. |
 - `plot_country.py` | Plots total COVID stats over time for a single selected country. |
 - `SIRmodel.py` | Contains helper functions for estimating and simulating SIR model behavior. |
